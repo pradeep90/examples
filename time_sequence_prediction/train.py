@@ -9,6 +9,8 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
+x: str = 42
+
 
 class Sequence(nn.Module):
     def __init__(self):

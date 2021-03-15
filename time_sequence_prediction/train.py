@@ -9,8 +9,6 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-x: str = 42
-
 
 class Sequence(nn.Module):
     def __init__(self):
@@ -55,9 +53,11 @@ if __name__ == "__main__":
     test_target = torch.from_numpy(data[:3, 1:])
     # build the model
     seq = Sequence()
+    # pyre-fixme[16]: `Sequence` has no attribute `double`.
     seq.double()
     criterion = nn.MSELoss()
     # use LBFGS as optimizer since we can load the whole data to train
+    # pyre-fixme[16]: `Sequence` has no attribute `parameters`.
     optimizer = optim.LBFGS(seq.parameters(), lr=0.8)
     # begin to train
     for i in range(opt.steps):
@@ -76,6 +76,7 @@ if __name__ == "__main__":
         # begin to predict, no need to track gradient here
         with torch.no_grad():
             future = 1000
+            # pyre-fixme[29]: `Sequence` is not a function.
             pred = seq(test_input, future=future)
             loss = criterion(pred[:, :-future], test_target)
             print("test loss:", loss.item())

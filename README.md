@@ -1,27 +1,5 @@
-[![pyre](https://github.com/facebook/pyre-check/workflows/pyre/badge.svg)](https://github.com/pradeep90/examples/.github/workflows/main.yml)
-
 # PyTorch Examples
-![Run Examples](https://github.com/pytorch/examples/workflows/Run%20Examples/badge.svg)
 
-WARNING: if you fork this repo, github actions will run daily on it. To disable
-this, go to <myuser>/examples/settings/actions and Disable Actions for this
-repository
+[![pyre](https://github.com/pradeep90/examples/workflows/Run%20Pyre/badge.svg)](https://github.com/pradeep90/examples/actions/workflows/main.yml)
 
-A repository showcasing examples of using [PyTorch](https://github.com/pytorch/pytorch)
-
-- [Image classification (MNIST) using Convnets](mnist)
-- [Word level Language Modeling using LSTM RNNs](word_language_model)
-- [Training Imagenet Classifiers with Residual Networks](imagenet)
-- [Generative Adversarial Networks (DCGAN)](dcgan)
-- [Variational Auto-Encoders](vae)
-- [Superresolution using an efficient sub-pixel convolutional neural network](super_resolution)
-- [Hogwild training of shared ConvNets across multiple processes on MNIST](mnist_hogwild)
-- [Training a CartPole to balance in OpenAI Gym with actor-critic](reinforcement_learning)
-- [Natural Language Inference (SNLI) with GloVe vectors, LSTMs, and torchtext](snli)
-- [Time sequence prediction - use an LSTM to learn Sine waves](time_sequence_prediction)
-- [Implement the Neural Style Transfer algorithm on images](fast_neural_style)
-- [Several examples illustrating the C++ Frontend](cpp)
-
-Additionally, a list of good examples hosted in their own repositories:
-
-- [Neural Machine Translation using sequence-to-sequence RNN with attention (OpenNMT)](https://github.com/OpenNMT/OpenNMT-py)
+Example repository showing how to use variadic tuples (PEP 646) to type real-world Tensor code.

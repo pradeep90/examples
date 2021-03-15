@@ -1,0 +1,9 @@
+from typing import (
+    Any,
+)
+
+class Module: ...
+
+class Linear(Module): ...
+
+def __getattr__(name) -> Any: ...

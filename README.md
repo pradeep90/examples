@@ -1,3 +1,5 @@
+[![pyre](https://github.com/facebook/pyre-check/workflows/pyre/badge.svg)](https://github.com/pradeep90/examples/.github/workflows/main.yml)
+
 # PyTorch Examples
 ![Run Examples](https://github.com/pytorch/examples/workflows/Run%20Examples/badge.svg)
 

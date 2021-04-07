@@ -1,6 +1,7 @@
 {
   "source_directories": [
-    "time_sequence_prediction"
+    "time_sequence_prediction",
+    "tensorflow_program_bugs"
   ],
   "search_path": ["stubs"],
   "taint_models_path": "/Users/pradeepkumars/.pyenv/versions/3.6.6/lib"

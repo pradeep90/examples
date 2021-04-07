@@ -24,10 +24,10 @@ def _run_trainer():
     nlayers = 4
     hidden = (
         torch.randn(nlayers, nindices, nhid),
-        torch.randn(nlayers, nindices, nhid)
+        torch.randn(nlayers, nindices, nhid),
     )
 
-    model = rnn.RNNModel('ps', ntoken, ninp, nhid, nlayers)
+    model = rnn.RNNModel("ps", ntoken, ninp, nhid, nlayers)
 
     # setup distributed optimizer
     opt = DistributedOptimizer(
@@ -67,8 +67,8 @@ def run_worker(rank, world_size):
     A wrapper function that initializes RPC, calls the function, and shuts down
     RPC.
     """
-    os.environ['MASTER_ADDR'] = 'localhost'
-    os.environ['MASTER_PORT'] = '29500'
+    os.environ["MASTER_ADDR"] = "localhost"
+    os.environ["MASTER_PORT"] = "29500"
     if rank == 1:
         rpc.init_rpc("trainer", rank=rank, world_size=world_size)
         _run_trainer()
@@ -83,4 +83,4 @@ def run_worker(rank, world_size):
 
 if __name__ == "__main__":
     world_size = 2
-    mp.spawn(run_worker, args=(world_size, ), nprocs=world_size, join=True)
+    mp.spawn(run_worker, args=(world_size,), nprocs=world_size, join=True)

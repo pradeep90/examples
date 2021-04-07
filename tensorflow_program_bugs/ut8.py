@@ -6,8 +6,8 @@ tf.set_random_seed(20180130)
 np.random.seed(20180130)
 
 data = np.array([0.1, 0.2])
-x = tf.placeholder("float", shape=[2])
-T1 = tf.Variable(tf.ones([2, 2]))
+x = tf.placeholder("float", shape=(2,))
+T1 = tf.Variable(tf.ones((2, 2)))
 l1 = tf.matmul(T1, x)
 init = tf.initialize_all_variables()
 

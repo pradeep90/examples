@@ -132,3 +132,7 @@ From https://github.com/ForeverZyh/TensorFlow-Program-Bugs/blob/master/StackOver
 ### UT-10
 
 This is a trivial error due to a tensor-placeholder size mismatch. This is unlikely to be interesting to many people, since barely anyone is writing new code using TensorFlow 1 these days.
+
+### UT-11
+
+Another trivial tensor-placeholder size mismatch.

@@ -2,37 +2,45 @@ import tensorflow as tf
 import numpy as np
 import random
 
-assert tf.__version__ == "1.8.0"
-tf.set_random_seed(20180130)
-np.random.seed(20180130)
-random.seed(20180130)
+num_features = 10
+num_data_points = 500
+xs = np.random.normal(0, 0.1, [num_data_points, num_features]).astype(np.float32)
+ys = [[random.randint(0, 1) for _ in range(num_data_points)]]
 
-n_feature = 10
-n_data = 500
-data = np.random.normal(0, 0.1, [n_data, n_feature])
-label = [[random.randint(0, 1) for _ in range(n_data)]]
+w = tf.Variable(tf.zeros([num_features, 2]), name="weight")
+b = tf.Variable(tf.zeros([2]), name="bias")
 
-sizeOfRow = len(data[0])
-x = tf.placeholder("float", shape=[None, sizeOfRow])
-y = tf.placeholder("float")
+optimizer = tf.keras.optimizers.SGD(1e-4)
 
+for _ in range(100):
+    with tf.GradientTape() as tape:
+        logits = tf.matmul(xs, w) + b
 
-def neuralNetworkModel(x):
-    W = tf.Variable(tf.zeros([sizeOfRow, 2]))
-    B = tf.Variable(tf.zeros([2]))
-    return tf.matmul(x, W) + B
+        # Broken:
+        # predictions = tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=ys)
+        #
+        # TensorFlow says:
+        #  InvalidArgumentError: logits and labels must be broadcastable:
+        #  logits_size=[500,2] labels_size=[1,500]
+        #  [Op:SoftmaxCrossEntropyWithLogits]
 
+        # Possible correction 1:
+        ys_onehot = tf.one_hot(ys[0], num_classes)
+        predictions = tf.nn.softmax_cross_entropy_with_logits(
+            logits=logits, labels=ys_onehot
+        )
 
-def neuralNetworkTrain(x):
-    prediction = neuralNetworkModel(x)
-    # using softmax function, normalize values to range(0,1)
-    cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=prediction, labels=y))
-    optimize = tf.train.GradientDescentOptimizer(1e-4).minimize(cost)
-    sess = tf.Session()
-    sess.run(tf.global_variables_initializer())
-    for i in range(100):
-        _, loss = sess.run([optimize, cost], feed_dict={x: data, y: label})
-        print("loss %g"% loss)
+        # Possible correction 2:
+        ys_sparse = ys[0]
+        predictions = tf.nn.sparse_softmax_cross_entropy_with_logits(
+            logits=logits, labels=ys_sparse
+        )
 
+        cost = tf.reduce_mean(predictions)
+    grads = tape.gradient(cost, (w, b))
+    optimizer.apply_gradients(zip(grads, (w, b)))
+    print("Cost: {:.3f}".format(cost.numpy()))
 
-neuralNetworkTrain(x)
+# Note: this still doesn't train successfully.
+# We can't fit random labels for 500 data points
+# with linear regression.

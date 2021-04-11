@@ -13,13 +13,18 @@ from typing import (
     Optional,
     Tuple,
     Type,
+    TypeVar,
     Union,
 )
 
+from typing_extensions import Literal
 from pyre_extensions import TypeVarTuple, Unpack
 
 Ts = TypeVarTuple("Ts")
 Ts2 = TypeVarTuple("Ts2")
+
+A1 = TypeVar("A1")
+A2 = TypeVar("A2")
 
 _Shape = Tuple[Unpack[Ts]]
 
@@ -42,6 +47,10 @@ class ndarray(_ArrayOrScalarCommon[Unpack[Ts]], Iterable, Sized, Container):
         strides: Tuple[int, ...] = ...,
         order: Optional[str] = ...,
     ) -> None: ...
+    @overload
+    def __getitem__(self: ndarray[A1, A2], key: Literal[0]) -> ndarray[A2]: ...
+    @overload
+    def __getitem__(self: ndarray[A1, A2], key: Literal[1]) -> ndarray[A1]: ...
     def __setitem__(self, key, value): ...
     @property
     def shape(self) -> Tuple[Unpack[Ts]]: ...
@@ -65,3 +74,6 @@ def array(
     ndmin: int = ...,
 ) -> ndarray[Unpack[Tuple[Any, ...]]]: ...
 def sin(x: ndarray[Unpack[Ts]]) -> ndarray[Unpack[Ts]]: ...
+
+class float32:
+    pass

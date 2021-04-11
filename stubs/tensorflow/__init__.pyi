@@ -29,6 +29,8 @@ A3 = TypeVar("A3")
 A4 = TypeVar("A4")
 A5 = TypeVar("A5")
 
+N = TypeVar("N", bound=int)
+
 ArrayLike = Union[
     ndarray[Unpack[Ts]],
     Tensor[Any, Unpack[Ts]],
@@ -39,7 +41,7 @@ class Variable(Generic[Unpack[Ts]]):
     shape: Tuple[Unpack[Ts]]
     def __init__(
         self,
-        initial_value: ndarray[Unpack[Ts]] = ...,
+        initial_value: ArrayLike[Unpack[Ts]] = ...,
         trainable=...,
         validate_shape=...,
         caching_device=...,
@@ -62,6 +64,7 @@ class float32: ...
 class Tensor(Generic[T, Unpack[Ts]]):
     shape: Tuple[Unpack[Ts]]
     def __eq__(self, other: Tensor[T, Unpack[Ts]]) -> bool: ...
+    def __add__(self: Tensor[A1, A2], other: ArrayLike[A2]) -> Tensor[A1, A2]: ...
 
 # ===== Begin matmul =====
 
@@ -128,3 +131,7 @@ def ones(
 def ensure_shape(
     x: Tensor[T, Unpack[Ts]], shape: Tuple[Unpack[Ts]], name: str = ...
 ) -> Tensor[T, Unpack[Ts]]: ...
+def one_hot(indices: ArrayLike[A1], depth: N) -> Tensor[Any, A1, N]: ...
+
+GradientTape = Any
+reduce_mean = Any

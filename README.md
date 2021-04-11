@@ -20,6 +20,8 @@ NOTE: Right now, we are [focusing](https://github.com/pradeep90/pytorch_examples
 
   One way is to accept a literal list and have the typechecker convert it to a tuple type.
 
++ Similarly, we need a way of inferring the shape of nested Python lists. For example, if `xs = [[0 for _ in range(10)]]`, we should be able to infer it has shape `(1, 10)`.
+
 + Concatenation of multiple variadics
 
   - `argmax`

@@ -3,12 +3,16 @@ import numpy as np
 import random
 
 num_features = 10
+num_classes = 2
 num_data_points = 500
-xs = np.random.normal(0, 0.1, [num_data_points, num_features]).astype(np.float32)
-ys = [[random.randint(0, 1) for _ in range(num_data_points)]]
+xs = np.random.normal(0, 0.1, (num_data_points, num_features)).astype("float32")
+# We can't infer the shape of this version :(
+# ys = [[random.randint(0, num_classes) for _ in range(num_data_points)]]
+# Instead:
+ys = np.random.randint(0, num_classes + 1, (1, num_data_points))
 
-w = tf.Variable(tf.zeros([num_features, 2]), name="weight")
-b = tf.Variable(tf.zeros([2]), name="bias")
+w = tf.Variable(tf.zeros((num_features, num_classes)))
+b = tf.Variable(tf.zeros((num_classes,)))
 
 optimizer = tf.keras.optimizers.SGD(1e-4)
 
@@ -23,6 +27,12 @@ for _ in range(100):
         #  InvalidArgumentError: logits and labels must be broadcastable:
         #  logits_size=[500,2] labels_size=[1,500]
         #  [Op:SoftmaxCrossEntropyWithLogits]
+        #
+        # Pyre says:
+        #  Incompatible parameter type [6]: Expected
+        #  `tf.Tensor[Variable[tf.nn.Batch (bound to int)], Variable[tf.nn.Features (bound to int)]]`
+        #  for 1st parameter `logits` to call `tf.nn.softmax_cross_entropy_with_logits` but got
+        # `tf.Tensor[int, int]`.
 
         # Possible correction 1:
         ys_onehot = tf.one_hot(ys[0], num_classes)

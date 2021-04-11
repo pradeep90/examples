@@ -13,4 +13,14 @@ def randint(
 @overload
 def randint(low: int, high: int = ..., size: N = ..., dtype=int) -> ndarray[N]: ...
 
+# ===== Begin normal =====
+@overload
+def normal(loc: float, scale: float, size: None = None) -> float: ...
+@overload
+def normal(
+    loc: float, scale: float, size: Tuple[Unpack[Ts]]
+) -> ndarray[Unpack[Ts]]: ...
+
+# ===== End normal =====
+
 seed: Any = ...

@@ -10,6 +10,7 @@ from typing import (
     SupportsBytes,
     SupportsAbs,
     overload,
+    Optional,
     Tuple,
     Type,
     Union,
@@ -18,6 +19,7 @@ from typing import (
 from pyre_extensions import TypeVarTuple, Unpack
 
 Ts = TypeVarTuple("Ts")
+Ts2 = TypeVarTuple("Ts2")
 
 _Shape = Tuple[Unpack[Ts]]
 
@@ -44,9 +46,10 @@ class ndarray(_ArrayOrScalarCommon[Unpack[Ts]], Iterable, Sized, Container):
     @property
     def shape(self) -> Tuple[Unpack[Ts]]: ...
     @overload
-    def reshape(self, shape: Unpack[Unpack[Ts2]]) -> ndarray[Unpack[Ts2]]: ...
+    def reshape(self, shape: Tuple[Unpack[Ts2]]) -> ndarray[Unpack[Ts2]]: ...
     @overload
     def reshape(self, *shape: Unpack[Ts2]) -> ndarray[Unpack[Ts2]]: ...
+    def __add__(self, other) -> ndarray[Unpack[Ts]]: ...
     def __div__(self, other) -> ndarray[Unpack[Ts]]: ...
     def __truediv__(self, other) -> ndarray[Unpack[Ts]]: ...
     def astype(self, dtype: str) -> ndarray[Unpack[Ts]]: ...
@@ -56,7 +59,7 @@ def empty(
 ) -> ndarray[Unpack[Ts]]: ...
 def array(
     object: object,
-    dtype: _DtypeLike = ...,
+    dtype=...,
     copy: bool = ...,
     subok: bool = ...,
     ndmin: int = ...,

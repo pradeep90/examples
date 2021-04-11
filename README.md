@@ -151,3 +151,9 @@ The kind of thing that would _actually_ help the programmer here would either be
 Unfortunately, both of these involve complicated calculations to determine how convolutions and pooling change the shape, which we can't do without type arithmetic.
 
 So yeah, however we slice this one, I don't think we can do anything useful :(
+
+### UT13
+
+The problem here is caused by a comparison to `argmax(Y)` instead of `Y` (a scalar) itself.
+
+I don't think we can catch this with static shape analysis. It doesn't produce a runtime error; it's valid code, but it just does the wrong thing. I think this code has been copy-pasted from a different example without the programmer really understanding what was going on.

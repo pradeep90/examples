@@ -14,6 +14,7 @@ from typing import (
     Tuple,
     TypeVar,
     Type,
+    Union,
 )
 
 from pyre_extensions import TypeVarTuple, Unpack
@@ -28,6 +29,12 @@ A2 = TypeVar("A2")
 A3 = TypeVar("A3")
 A4 = TypeVar("A4")
 A5 = TypeVar("A5")
+
+ArrayLike = Union[
+    ndarray[DType, Unpack[Ts]],
+    Tensor[Any, Unpack[Ts]],
+    Variable[Any, Unpack[Ts]],
+]
 
 class Variable(Generic[DType, Unpack[Ts]]):
     shape: Tuple[Unpack[Ts]]
@@ -57,9 +64,13 @@ class Tensor(Generic[DType, Unpack[Ts]]):
     shape: Tuple[Unpack[Ts]]
     def __eq__(self, other: Tensor[DType, Unpack[Ts]]) -> bool: ...
 
+# ===== BEGIN `matmul` =====
+
+# Normal matrix multiplication: (A1, A2) x (A2, A3).
+@overload
 def matmul(
-    a,
-    b,
+    a: ArrayLike[DType, A1, A2],
+    b: ArrayLike[DType, A2, A3],
     transpose_a=...,
     transpose_b=...,
     adjoint_a=...,
@@ -67,7 +78,38 @@ def matmul(
     a_is_sparse=...,
     b_is_sparse=...,
     name=...,
-) -> Any: ...
+) -> Tensor[DType, A1, A3]: ...
+
+# (A2, A3) x (A3, A4) with a batch size of A1.
+@overload
+def matmul(
+    a: ArrayLike[DType, A1, A2, A3],
+    b: ArrayLike[DType, A1, A3, A4],
+    transpose_a=...,
+    transpose_b=...,
+    adjoint_a=...,
+    adjoint_b=...,
+    a_is_sparse=...,
+    b_is_sparse=...,
+    name=...,
+) -> Tensor[DType, A1, A2, A4]: ...
+
+# (A1, A2) x (A2, A3), with a batch size of A4,
+# with first arg converted to batch size A4 through broadcasting.
+@overload
+def matmul(
+    a: ArrayLike[DType, A1, A2],
+    b: ArrayLike[DType, A4, A2, A3],
+    transpose_a=...,
+    transpose_b=...,
+    adjoint_a=...,
+    adjoint_b=...,
+    a_is_sparse=...,
+    b_is_sparse=...,
+    name=...,
+) -> Tensor[DType, A4, A1, A3]: ...
+
+# ===== END `matmul` =====
 @overload
 def zeros(
     shape: Tuple[Unpack[Ts]], dtype: Type[T], name: str = ...

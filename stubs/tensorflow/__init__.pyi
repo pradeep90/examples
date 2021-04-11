@@ -11,6 +11,7 @@ from typing import (
     SupportsBytes,
     SupportsAbs,
     Literal as L,
+    Tuple,
     TypeVar,
 )
 
@@ -18,6 +19,7 @@ from pyre_extensions import TypeVarTuple, Unpack
 from numpy import ndarray
 
 Ts = TypeVarTuple("Ts")
+T = TypeVar("T")
 
 A1 = TypeVar("A1")
 A2 = TypeVar("A2")
@@ -47,6 +49,9 @@ Session: Any = ...
 global_variables_initializer: Any = ...
 seed: Any = ...
 
+class Tensor(Generic[T, Unpack[Ts]]):
+    shape: Tuple[Unpack[Ts]]
+
 def matmul(
     a,
     b,
@@ -58,3 +63,9 @@ def matmul(
     b_is_sparse=...,
     name=...,
 ) -> Any: ...
+def zeros(
+    shape: Tuple[Unpack[Ts]], dtype: Type[T] = ..., name: str = ...
+) -> Tensor[T, Unpack[Ts]]: ...
+def ensure_shape(
+    x: Tensor[T, Unpack[Ts]], shape: Tuple[Unpack[Ts]], name: str = ...
+) -> Tensor[T, Unpack[Ts]]: ...

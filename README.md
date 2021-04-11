@@ -8,12 +8,20 @@ NOTE: Right now, we are [focusing](https://github.com/pradeep90/pytorch_examples
 
 # Catching Tensor Shape Errors using the Typechecker
 
-## Things still TODO:
+## TODO
 
-+ ndarray needs to be generic in the dtype as well.
++ TODO: ndarray needs to be generic in the dtype as well.
+
+## Features we will need
+
++ Need some way of extracting a tuple from a list. For example, `tf.zeros([3, 4])` should return `Tensor[float32, L[3], L[4]]`. However, we have no way to extract individual types from a list. Note that we handle a tuple just fine: `tf.zeros((3, 4))`.
 
 ## Notes on StackOverflow bugs
 
 From https://github.com/ForeverZyh/TensorFlow-Program-Bugs/blob/master/StackOverflow
 
 + UT-2 - tensorflow_program_bugs/ut_2_multiplication.py - this needs broadcasting (from type arithmetic).
+
++ UT-3 - tensorflow_program_bugs/ut_3_image_set_shape.py - I'm using `tf.ensure_shape` instead of `tf.set_shape`.
+
+  Note that `x.set_shape` can't be typed statically since it changes the type parameters of a Tensor. Basically, `x: Tensor[L[10], L20]; x.set_shape([2, 10, 10])` will make the tensor have shape `2x10x10` at runtime. The Python type system has no way of reflecting the updated `self` type in the return signature. So, I'm using the [TensorFlow-recommended](https://www.tensorflow.org/api_docs/python/tf/Tensor#set_shape) `x.ensure_shape` instead, which returns a new Tensor. We can make the returned tensor type have the new shape.

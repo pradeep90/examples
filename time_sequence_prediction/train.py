@@ -26,29 +26,18 @@ class Sequence(nn.Module):
         self.lstm2: nn.LSTMCell[L[51], L[51]] = nn.LSTMCell(51, 51)
         self.linear: nn.Linear[L[51], L[1]] = nn.Linear(51, 1)
 
-    # Ideally, we'd say that the signature of `__call__` is the same as that
-    # of `forward`. Unfortunately, I don't know of a way to do that.
-    @overload
-    def __call__(
-        self, input: Tensor[double, N1, N2], future: L[0] = 0
-    ) -> Tensor[double, N1, N2]: ...
-    @overload
-    def __call__(
-        self, input: Tensor[double, N1, N2], future: N3
-    ) -> Tensor[double, N1, Add[N2, N3]]: ...
-    def __call__(
-        self, input: Tensor[double, N1, N2], future: int = ...
-    ) -> Tensor[double, N1, int]: ...
-
-
     @overload
     def forward(
         self, input: Tensor[double, N1, N2], future: L[0] = 0
-    ) -> Tensor[double, N1, N2]: ...
+    ) -> Tensor[double, N1, N2]:
+        ...
+
     @overload
     def forward(
         self, input: Tensor[double, N1, N2], future: N3
-    ) -> Tensor[double, N1, Add[N2, N3]]: ...
+    ) -> Tensor[double, N1, Add[N2, N3]]:
+        ...
+
     def forward(
         self, input: Tensor[double, N1, N2], future: int = ...
     ) -> Tensor[double, N1, int]:
@@ -72,6 +61,25 @@ class Sequence(nn.Module):
         # torch.cat is too dynamic, so we have to ignore an error.
         final_outputs = torch.cat(outputs, dim=1)
         return final_outputs  # type: ignore
+
+    # Ideally, we'd say that the signature of `__call__` is the same as that
+    # of `forward`. Unfortunately, I don't know of a way to do that.
+    @overload
+    def __call__(
+        self, input: Tensor[double, N1, N2], future: L[0] = 0
+    ) -> Tensor[double, N1, N2]:
+        ...
+
+    @overload
+    def __call__(
+        self, input: Tensor[double, N1, N2], future: N3
+    ) -> Tensor[double, N1, Add[N2, N3]]:
+        ...
+
+    def __call__(
+        self, input: Tensor[double, N1, N2], future: int = ...
+    ) -> Tensor[double, N1, int]:
+        ...
 
 
 if __name__ == "__main__":

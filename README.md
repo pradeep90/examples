@@ -136,3 +136,18 @@ This is a trivial error due to a tensor-placeholder size mismatch. This is unlik
 ### UT-11
 
 Another trivial tensor-placeholder size mismatch.
+
+### UT-12
+
+The actual issue here is that the programmer tried to flatten a tensor using `reshape(h, [-1, 4 * 4 * 64])`. Unfortunately, they got the size wrong - the tensor was actually shape `batch x 8 x 8 x 64`. This doesn't actually cause an error until later in the code, when the incorrect flattening causes a later `reshape` to result in a tensor with the wrong batch size.
+
+While we _could_ statically detect the same error as is produced at runtime, I'm not sure that would be very interesting - that error doesn't help in narrowing down what the problem really is. And I don't think we can detect the problem with the reshape with static analysis, because the programmer simply told the program to do the wrong thing.
+
+The kind of thing that would _actually_ help the programmer here would either be:
+
+* A system which shows statically-inferred shapes to the user _while_ they're coding.
+* Type annotations specifying what the user expects the shape after each layer to be, which could be checked _after_ the user has finished coding.
+
+Unfortunately, both of these involve complicated calculations to determine how convolutions and pooling change the shape, which we can't do without type arithmetic.
+
+So yeah, however we slice this one, I don't think we can do anything useful :(

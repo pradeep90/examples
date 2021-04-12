@@ -143,7 +143,6 @@ if __name__ == "__main__":
     for i in range(opt.steps):
         print("STEP: ", i)
 
-        # pyre-ignore[6]: Expected Optional[Callable[[], float]] got Callable[[], Tensor[float64]].
         optimizer.step(closure)
         # begin to predict, no need to track gradient here
         with torch.no_grad():

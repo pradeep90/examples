@@ -1,5 +1,14 @@
-from typing import (
-    Any,
-)
+from pyre_extensions import TypeVarTuple, Unpack
+from typing import Any, Generic, TypeVar, Tuple, overload
 
-def __getattr__(name) -> Any: ...
+from .nn import nn as nn
+
+Ts = TypeVarTuple("Ts")
+
+class Tensor(Generic[Unpack[Ts]]): ...
+
+save: Any
+manual_seed: Any
+load: Any
+from_numpy: Any
+no_grad: Any

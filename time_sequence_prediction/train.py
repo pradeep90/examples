@@ -9,13 +9,15 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
+from typing_extensions import Literal as L
+
 
 class Sequence(nn.Module):
-    def __init__(self):
+    def __init__(self) -> None:
         super(Sequence, self).__init__()
-        self.lstm1 = nn.LSTMCell(1, 51)
-        self.lstm2 = nn.LSTMCell(51, 51)
-        self.linear = nn.Linear(51, 1)
+        self.lstm1: nn.LSTMCell[L[1], L[51]] = nn.LSTMCell(1, 51)
+        self.lstm2: nn.LSTMCell[L[51], L[51]] = nn.LSTMCell(51, 51)
+        self.linear: nn.Linear[L[51], L[1]] = nn.Linear(51, 1)
 
     def forward(self, input, future=0):
         outputs = []
@@ -85,7 +87,6 @@ if __name__ == "__main__":
         # begin to predict, no need to track gradient here
         with torch.no_grad():
             future = 1000
-            # pyre-fixme[29]: `Sequence` is not a function.
             pred = seq(test_input, future=future)
             loss = criterion(pred[:, :-future], test_target)
             print("test loss:", loss.item())

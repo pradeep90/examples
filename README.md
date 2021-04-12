@@ -10,7 +10,9 @@ NOTE: Right now, we are [focusing](https://github.com/pradeep90/pytorch_examples
 
 ## TODO
 
-+ TODO: ndarray needs to be generic in the dtype as well.
++ TODO: ndarray and torch.Tensor need to be generic in the dtype as well.
+
++ Add `"strict": true` to `.pyre_configuration`.
 
 + TODO: Pyre needs to show the `Literal` types. Right now, it weakens them to `int`, which means we don't see the exact values: `Revealed type for actual_prediction is tf.Tensor[tf.float32, int]`.
 

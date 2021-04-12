@@ -46,7 +46,7 @@ class Sequence(nn.Module):
             output = self.linear(h_t2)
             outputs.append(output)
 
-        # torch.cat is too dynamic so we have to ignore an error.
+        # torch.cat is too dynamic, so we have to ignore an error.
         final_outputs = torch.cat(outputs, dim=1)
         return final_outputs  # type: ignore
 
@@ -67,11 +67,9 @@ if __name__ == "__main__":
 
     # build the model
     seq = Sequence()
-    # pyre-fixme[16]: `Sequence` has no attribute `double`.
     seq.double()
     criterion = nn.MSELoss()
     # use LBFGS as optimizer since we can load the whole data to train
-    # pyre-fixme[16]: `Sequence` has no attribute `parameters`.
     optimizer = optim.LBFGS(seq.parameters(), lr=0.8)
 
     def closure():
@@ -91,18 +89,7 @@ if __name__ == "__main__":
             linewidth=2.0,
         )
 
-    # begin to train
-    for i in range(opt.steps):
-        print("STEP: ", i)
-
-        optimizer.step(closure)
-        # begin to predict, no need to track gradient here
-        with torch.no_grad():
-            future = 1000
-            pred = seq(test_input, future=future)
-            loss = criterion(pred[:, :-future], test_target)
-            print("test loss:", loss.item())
-            y = pred.detach().numpy()
+    def draw_result() -> None:
         # draw the result
         plt.figure(figsize=(30, 10))
         plt.title(
@@ -119,3 +106,18 @@ if __name__ == "__main__":
         draw(y[2], "b")
         plt.savefig("predict%d.pdf" % i)
         plt.close()
+
+    # begin to train
+    for i in range(opt.steps):
+        print("STEP: ", i)
+
+        optimizer.step(closure)
+        # begin to predict, no need to track gradient here
+        with torch.no_grad():
+            future = 1000
+            pred = seq(test_input, future=future)
+            loss = criterion(pred[:, :-future], test_target)
+            print("test loss:", loss.item())
+            y = pred.detach().numpy()
+
+        draw_result()

@@ -27,6 +27,15 @@ NOTE: Right now, we are [focusing](https://github.com/pradeep90/pytorch_examples
 	time_sequence_prediction/train.py:41:12 Revealed type [-1]: Revealed type for `[foo]` is `List[Tensor[torch.float64, Variable[N1 (bound to int)], int]]`.
 	```
 
++ TODO: Pyre - Would be great if we could assign one method to another and preserve the type. Right now, this doesn't work:
+
+	```
+	def forward(self, x: Tensor[double, N1, N2]) -> Tensor[double, N1, N2]: ...
+	__call__ = forward
+	```
+
+	It works out of the box in [Mypy](https://mypy-play.net/?mypy=latest&python=3.8&gist=08d857dc4403457f3a72ccdfbea6d0f0). Pyre does recognize the correct type but it doesn't automatically use it: `Attribute __call__ of class Sequence has type ... but no type is specified`. And I couldn't just write the `Callable` type because it has overloads and Python by itself doesn't have syntax for that (plus, it'd be really ugly). Maybe we can special-case `__call__`.
+
 ## Gotchas
 
 + We need to annotate empty list assignments: `x = []`. Otherwise, Pyre is unable to guess the eventual type. (We hope to change that in the future, but this is going to be a limitation for a while.)

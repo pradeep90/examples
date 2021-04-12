@@ -10,11 +10,28 @@ NOTE: Right now, we are [focusing](https://github.com/pradeep90/pytorch_examples
 
 ## TODO
 
-+ TODO: ndarray and torch.Tensor need to be generic in the dtype as well.
-
 + Add `"strict": true` to `.pyre_configuration`.
 
 + TODO: Pyre needs to show the `Literal` types. Right now, it weakens them to `int`, which means we don't see the exact values: `Revealed type for actual_prediction is tf.Tensor[tf.float32, int]`.
+
++ TODO: Pyre shouldn't weaken literals in some cases
+
+	```
+	outputs: List[Tensor[double, N1, L[1]]] = []
+	foo: Tensor[double, N1, L[1]]
+	outputs += [foo]
+	reveal_type([foo])
+
+
+	time_sequence_prediction/train.py:40:23 Incompatible parameter type [6]: Expected `typing.Iterable[Tensor[torch.float64, Variable[N1 (bound to int)], typing_extensions.Literal[1]]]` for 1st positional only parameter to call `list.__iadd__` but got `typing.Iterable[Tensor[torch.float64, Variable[N1 (bound to int)], int]]`.
+	time_sequence_prediction/train.py:41:12 Revealed type [-1]: Revealed type for `[foo]` is `List[Tensor[torch.float64, Variable[N1 (bound to int)], int]]`.
+	```
+
+## Gotchas
+
++ We need to annotate empty list assignments: `x = []`. Otherwise, Pyre is unable to guess the eventual type. (We hope to change that in the future, but this is going to be a limitation for a while.)
+
++ We need to annotate attributes: `self.lstm1: nn.LSTMCell[L[1], L[51]] = nn.LSTMCell(1, 51)`. Pyre doesn't infer these automatically (because of reasons).
 
 ## Features we will need
 
@@ -24,9 +41,19 @@ NOTE: Right now, we are [focusing](https://github.com/pradeep90/pytorch_examples
 
   One way is to accept a literal list and have the typechecker convert it to a tuple type.
 
+  Another way is to have a `FiniteList[Unpack[Ts]]`, which has types `Ts` and behaves in all ways like a `Tuple`, except that it is initialized with a `[1, 2, 3]`.
+
 + Concatenation of multiple variadics
 
   - `argmax`
+
+  - Will also need this for arbitrary indexing: `tensor.size(1)` gives the 2nd item in the shape tuple. We could type this using:
+
+	```
+	def size(self: Tensor[*Ts, T, *Rs], axis: Length[Ts]) -> T: ...
+	```
+
+	However, from my search of large codebases, almost all calls to `tensor.size(...)` used either axis=0, 1, 2, or 3. So, we can readily handle this with overloads.
 
 + Broadcasting - this is intended to be part of type arithmetic, but the relevant code has not yet landed in Pyre.
 
@@ -37,6 +64,7 @@ NOTE: Right now, we are [focusing](https://github.com/pradeep90/pytorch_examples
 From https://github.com/ForeverZyh/TensorFlow-Program-Bugs/blob/master/StackOverflow
 
 + UT-2 - tensorflow_program_bugs/ut_2_multiplication.py - this needs broadcasting (from type arithmetic).
+
 
 + UT-3 - tensorflow_program_bugs/ut_3_image_set_shape.py - I'm using `tf.ensure_shape` instead of `tf.set_shape`.
 

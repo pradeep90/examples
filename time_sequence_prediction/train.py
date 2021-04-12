@@ -1,6 +1,7 @@
 from __future__ import print_function
 import argparse
 import torch
+from torch import Tensor, double
 import torch.nn as nn
 import torch.optim as optim
 import numpy as np
@@ -9,7 +10,13 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
+from pyre_extensions import Add
 from typing_extensions import Literal as L
+from typing import TypeVar, Tuple, List
+
+N1 = TypeVar("N1", bound=int)
+N2 = TypeVar("N2", bound=int)
+N3 = TypeVar("N3", bound=int)
 
 
 class Sequence(nn.Module):
@@ -19,8 +26,10 @@ class Sequence(nn.Module):
         self.lstm2: nn.LSTMCell[L[51], L[51]] = nn.LSTMCell(51, 51)
         self.linear: nn.Linear[L[51], L[1]] = nn.Linear(51, 1)
 
-    def forward(self, input, future=0):
-        outputs = []
+    def forward(
+        self, input: Tensor[double, N1, N2], future: N3 = 0
+    ) -> Tensor[double, N1, Add[N2, N3]]:
+        outputs: List[Tensor[double, N1, L[1]]] = []
         h_t = torch.zeros(input.size(0), 51, dtype=torch.double)
         c_t = torch.zeros(input.size(0), 51, dtype=torch.double)
         h_t2 = torch.zeros(input.size(0), 51, dtype=torch.double)
@@ -30,14 +39,16 @@ class Sequence(nn.Module):
             h_t, c_t = self.lstm1(input_t, (h_t, c_t))
             h_t2, c_t2 = self.lstm2(h_t, (h_t2, c_t2))
             output = self.linear(h_t2)
-            outputs += [output]
+            outputs.append(output)
         for i in range(future):  # if we should predict the future
             h_t, c_t = self.lstm1(output, (h_t, c_t))
             h_t2, c_t2 = self.lstm2(h_t, (h_t2, c_t2))
             output = self.linear(h_t2)
-            outputs += [output]
-        outputs = torch.cat(outputs, dim=1)
-        return outputs
+            outputs.append(output)
+
+        # torch.cat is too dynamic so we have to ignore an error.
+        final_outputs = torch.cat(outputs, dim=1)
+        return final_outputs  # type: ignore
 
 
 if __name__ == "__main__":
@@ -53,6 +64,7 @@ if __name__ == "__main__":
     target = torch.from_numpy(data[3:, 1:])
     test_input = torch.from_numpy(data[:3, :-1])
     test_target = torch.from_numpy(data[:3, 1:])
+
     # build the model
     seq = Sequence()
     # pyre-fixme[16]: `Sequence` has no attribute `double`.

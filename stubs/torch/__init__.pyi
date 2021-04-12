@@ -1,10 +1,12 @@
 from pyre_extensions import TypeVarTuple, Unpack, Divide
 from typing import Any, Iterable, Generic, TypeVar, Tuple, Type, overload
 from typing_extensions import Literal as L
+from numpy import ndarray
 
 from .nn import nn as nn
 
 DType = TypeVar("DType")
+T = TypeVar("T")
 Ts = TypeVarTuple("Ts")
 Rs = TypeVarTuple("Rs")
 N = TypeVar("N", bound=int)
@@ -40,6 +42,11 @@ class Tensor(Generic[DType, Unpack[Ts]]):
     ) -> Iterable[Tensor[DType, N1, N, Unpack[Rs]]]: ...
 
     def item(self: Tensor[DType]) -> DType: ...
+    def backward(self) -> None: ...
+    def __getitem__(self, item: Any) -> Any: ...
+    def detach(self: T) -> T: ...
+    def numpy(self) -> ndarray[DType, Unpack[Ts]]: ...
+
 
 @overload
 def zeros(*size: Unpack[Ts], dtype: Type[DType]) -> Tensor[DType, Unpack[Ts]]: ...

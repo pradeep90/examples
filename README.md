@@ -59,6 +59,54 @@ NOTE: Right now, we are [focusing](https://github.com/pradeep90/pytorch_examples
 
 + Better error messages. They are pretty arcane now.
 
++ Would be great to bind a type variable based on a default value. Otherwise, we have to add an overload for the default value.
+
+	```
+	@overload
+	def zeros(
+		shape: Tuple[Unpack[Ts]], dtype: Type[T], name: str = ...
+	) -> Tensor[T, Unpack[Ts]]: ...
+	@overload
+	def zeros(
+		shape: Tuple[Unpack[Ts]], dtype: Type[float32] = ..., name: str = ...
+	) -> Tensor[float32, Unpack[Ts]]: ...
+
+
+	# Ideally:
+	def zeros(
+		shape: Tuple[Unpack[Ts]], dtype: Type[T] = float32, name: str = ...
+	) -> Tensor[T, Unpack[Ts]]: ...
+
+	reveal_type(zeros(10, 20)) # => Tensor[float32, L[10], L[20]]
+	reveal_type(zeros(10, 20), dtype=int) # => Tensor[int, L[10], L[20]]
+	```
+
+	Another example:
+
+	```
+	@overload
+	def forward(
+		self, input: Tensor[double, N1, N2], future: L[0] = 0
+	) -> Tensor[double, N1, N2]: ...
+	@overload
+	def forward(
+		self, input: Tensor[double, N1, N2], future: N3
+	) -> Tensor[double, N1, Add[N2, N3]]: ...
+
+	# Ideally:
+	def forward(
+		self, input: Tensor[double, N1, N2], future: N3 = 0
+	) -> Tensor[double, N1, Add[N2, N3]]: ...
+	```
+
+	One blocker is that stubs are supposed to have ellipses instead of default values: `dtype: Type[T] = ...`. We'd have to change that.
+
++ Using a zero-dimensional Tensor as a float: I got an error when passing a function to `optimizer.step`
+
+  > Expected Optional[Callable[[], float]] got Callable[[], Tensor[float64]].
+
+  I'm guessing that Tensor with zero dimensions should be treated as a float.
+
 ## Notes on StackOverflow bugs
 
 From https://github.com/ForeverZyh/TensorFlow-Program-Bugs/blob/master/StackOverflow

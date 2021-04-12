@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 
 from pyre_extensions import Add
 from typing_extensions import Literal as L
-from typing import TypeVar, Tuple, List
+from typing import TypeVar, Tuple, List, overload
 
 N1 = TypeVar("N1", bound=int)
 N2 = TypeVar("N2", bound=int)
@@ -26,9 +26,32 @@ class Sequence(nn.Module):
         self.lstm2: nn.LSTMCell[L[51], L[51]] = nn.LSTMCell(51, 51)
         self.linear: nn.Linear[L[51], L[1]] = nn.Linear(51, 1)
 
+    # Ideally, we'd say that the signature of `__call__` is the same as that
+    # of `forward`. Unfortunately, I don't know of a way to do that.
+    @overload
+    def __call__(
+        self, input: Tensor[double, N1, N2], future: L[0] = 0
+    ) -> Tensor[double, N1, N2]: ...
+    @overload
+    def __call__(
+        self, input: Tensor[double, N1, N2], future: N3
+    ) -> Tensor[double, N1, Add[N2, N3]]: ...
+    def __call__(
+        self, input: Tensor[double, N1, N2], future: int = ...
+    ) -> Tensor[double, N1, int]: ...
+
+
+    @overload
     def forward(
-        self, input: Tensor[double, N1, N2], future: N3 = 0
-    ) -> Tensor[double, N1, Add[N2, N3]]:
+        self, input: Tensor[double, N1, N2], future: L[0] = 0
+    ) -> Tensor[double, N1, N2]: ...
+    @overload
+    def forward(
+        self, input: Tensor[double, N1, N2], future: N3
+    ) -> Tensor[double, N1, Add[N2, N3]]: ...
+    def forward(
+        self, input: Tensor[double, N1, N2], future: int = ...
+    ) -> Tensor[double, N1, int]:
         outputs: List[Tensor[double, N1, L[1]]] = []
         h_t = torch.zeros(input.size(0), 51, dtype=torch.double)
         c_t = torch.zeros(input.size(0), 51, dtype=torch.double)
@@ -60,10 +83,10 @@ if __name__ == "__main__":
     torch.manual_seed(0)
     # load data and make training set
     data = torch.load("traindata.pt")
-    input = torch.from_numpy(data[3:, :-1])
-    target = torch.from_numpy(data[3:, 1:])
-    test_input = torch.from_numpy(data[:3, :-1])
-    test_target = torch.from_numpy(data[:3, 1:])
+    input: Tensor[double, L[97], L[999]] = torch.from_numpy(data[3:, :-1])
+    target: Tensor[double, L[97], L[999]] = torch.from_numpy(data[3:, 1:])
+    test_input: Tensor[double, L[3], L[999]] = torch.from_numpy(data[:3, :-1])
+    test_target: Tensor[double, L[3], L[999]] = torch.from_numpy(data[:3, 1:])
 
     # build the model
     seq = Sequence()
@@ -72,10 +95,11 @@ if __name__ == "__main__":
     # use LBFGS as optimizer since we can load the whole data to train
     optimizer = optim.LBFGS(seq.parameters(), lr=0.8)
 
-    def closure():
+    def closure() -> Tensor[double]:
         optimizer.zero_grad()
         out = seq(input)
         loss = criterion(out, target)
+
         print("loss:", loss.item())
         loss.backward()
         return loss
@@ -89,7 +113,7 @@ if __name__ == "__main__":
             linewidth=2.0,
         )
 
-    def draw_result() -> None:
+    def draw_result(y) -> None:
         # draw the result
         plt.figure(figsize=(30, 10))
         plt.title(
@@ -111,6 +135,7 @@ if __name__ == "__main__":
     for i in range(opt.steps):
         print("STEP: ", i)
 
+        # pyre-ignore[6]: Expected Optional[Callable[[], float]] got Callable[[], Tensor[float64]].
         optimizer.step(closure)
         # begin to predict, no need to track gradient here
         with torch.no_grad():
@@ -120,4 +145,4 @@ if __name__ == "__main__":
             print("test loss:", loss.item())
             y = pred.detach().numpy()
 
-        draw_result()
+        draw_result(y)

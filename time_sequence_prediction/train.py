@@ -59,19 +59,28 @@ if __name__ == "__main__":
     # use LBFGS as optimizer since we can load the whole data to train
     # pyre-fixme[16]: `Sequence` has no attribute `parameters`.
     optimizer = optim.LBFGS(seq.parameters(), lr=0.8)
+
+    def closure():
+        optimizer.zero_grad()
+        out = seq(input)
+        loss = criterion(out, target)
+        print("loss:", loss.item())
+        loss.backward()
+        return loss
+
+    def draw(yi, color):
+        plt.plot(np.arange(input.size(1)), yi[: input.size(1)], color, linewidth=2.0)
+        plt.plot(
+            np.arange(input.size(1), input.size(1) + future),
+            yi[input.size(1) :],
+            color + ":",
+            linewidth=2.0,
+        )
+
     # begin to train
     for i in range(opt.steps):
         print("STEP: ", i)
 
-        def closure():
-            optimizer.zero_grad()
-            out = seq(input)
-            loss = criterion(out, target)
-            print("loss:", loss.item())
-            loss.backward()
-            return loss
-
-        # pyre-fixme[16]: Function defined within loop is too dynamic for Pyre to know what it is.
         optimizer.step(closure)
         # begin to predict, no need to track gradient here
         with torch.no_grad():
@@ -92,22 +101,8 @@ if __name__ == "__main__":
         plt.xticks(fontsize=20)
         plt.yticks(fontsize=20)
 
-        def draw(yi, color):
-            plt.plot(
-                np.arange(input.size(1)), yi[: input.size(1)], color, linewidth=2.0
-            )
-            plt.plot(
-                np.arange(input.size(1), input.size(1) + future),
-                yi[input.size(1) :],
-                color + ":",
-                linewidth=2.0,
-            )
-
-        # pyre-fixme[16]: Function defined within loop is too dynamic for Pyre to know what it is.
         draw(y[0], "r")
-        # pyre-fixme[16]: Function defined within loop is too dynamic for Pyre to know what it is.
         draw(y[1], "g")
-        # pyre-fixme[16]: Function defined within loop is too dynamic for Pyre to know what it is.
         draw(y[2], "b")
         plt.savefig("predict%d.pdf" % i)
         plt.close()

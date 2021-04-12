@@ -9,6 +9,7 @@ from typing import (
 
 from .. import Tensor
 
+DType = TypeVar("DType")
 Ts = TypeVarTuple("Ts")
 InputSize = TypeVar("InputSize", bound=int)
 OutputSize = TypeVar("OutputSize", bound=int)
@@ -25,9 +26,11 @@ class LSTMCell(Module, Generic[InputSize, HiddenSize]):
     ) -> None: ...
     def __call__(
         self,
-        input: Tensor[Batch, InputSize],
-        hidden: Tuple[Tensor[Batch, HiddenSize], Tensor[Batch, HiddenSize]] = ...,
-    ) -> Tuple[Tensor[Batch, HiddenSize], Tensor[Batch, HiddenSize]]: ...
+        input: Tensor[DType, Batch, InputSize],
+        hidden: Tuple[
+            Tensor[DType, Batch, HiddenSize], Tensor[DType, Batch, HiddenSize]
+        ] = ...,
+    ) -> Tuple[Tensor[DType, Batch, HiddenSize], Tensor[DType, Batch, HiddenSize]]: ...
 
 class Linear(Module, Generic[InputSize, OutputSize]):
     def __init__(
@@ -35,7 +38,7 @@ class Linear(Module, Generic[InputSize, OutputSize]):
     ) -> None: ...
     def __call__(
         self,
-        input: Tensor[N, Unpack[Ts], InputSize],
-    ) -> Tensor[N, Unpack[Ts], OutputSize]: ...
+        input: Tensor[DType, N, Unpack[Ts], InputSize],
+    ) -> Tensor[DType, N, Unpack[Ts], OutputSize]: ...
 
 def __getattr__(name) -> Any: ...

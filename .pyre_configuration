@@ -1,7 +1,8 @@
 {
   "source_directories": [
     "time_sequence_prediction",
-    "tensorflow_program_bugs"
+    "tensorflow_program_bugs",
+    "fast_neural_style/neural_style"
   ],
   "search_path": [
     {

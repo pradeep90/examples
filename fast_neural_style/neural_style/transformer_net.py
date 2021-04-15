@@ -26,7 +26,7 @@ Batch = TypeVar('Batch', bound=int)
 Height = TypeVar('Height', bound=int)
 Width = TypeVar('Width', bound=int)
 Channels = TypeVar('Channels', bound=int)
-ReflectionPadding = TypeVar('ReflectionPadding', bount=int)
+ReflectionPadding = TypeVar('ReflectionPadding', bound=int)
 Upscale = TypeVar('Upscale', bound=int)
 
 

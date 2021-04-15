@@ -1,4 +1,5 @@
-from pyre_extensions import TypeVarTuple, Unpack
+from pyre_extensions import TypeVarTuple, Unpack, Add, Multiply, Divide
+from typing_extensions import Literal
 
 from typing import (
     Any,
@@ -53,5 +54,63 @@ class MSELoss(_Loss):
         input: Tensor[DType, N, Unpack[Ts]],
         target: Tensor[DType, N, Unpack[Ts]],
     ) -> Tensor[DType]: ...
+
+InChannels = TypeVar("InChannels", bound=int)
+OutChannels = TypeVar("OutChannels", bound=int)
+KernelSize = TypeVar("KernelSize", bound=int)
+Stride = TypeVar("Stride", bound=int)
+Batch = TypeVar("Batch", bound=int)
+Height = TypeVar("Height", bound=int)
+Width = TypeVar("Width", bound=int)
+Channels = TypeVar("Channels", bound=int)
+# We don't bind this to `int`, because `transformer_net` uses
+# `padding=kernel_size // 2`, which is a `pyre_extensions.IntExpression`.
+Padding = TypeVar("Padding")
+
+class Conv2d(Generic[InChannels, OutChannels, KernelSize, Stride]):
+    def __init__(
+        self,
+        in_channels: InChannels,
+        out_channels: OutChannels,
+        kernel_size: KernelSize,
+        stride: Stride,
+    ): ...
+    def __call__(
+        self, input: Tensor[DType, Batch, InChannels, Height, Width]
+    ) -> Tensor[
+        DType,
+        Batch,
+        OutChannels,
+        # [(W−K+2P) / S] + 1.
+        Add[Divide[Add[Height, Multiply[Literal[-1], KernelSize]], Stride], Literal[1]],
+        Add[Divide[Add[Width, Multiply[Literal[-1], KernelSize]], Stride], Literal[1]],
+    ]: ...
+
+class ReflectionPad2d(Generic[Padding]):
+    def __init__(
+        self,
+        padding: Padding,
+    ): ...
+    def __call__(
+        self,
+        input: Tensor[DType, Batch, Channels, Height, Width],
+    ) -> Tensor[
+        DType,
+        Batch,
+        Channels,
+        Add[Add[Height, Padding], Padding],
+        Add[Add[Width, Padding], Padding],
+    ]: ...
+
+class InstanceNorm2d:
+    def __init__(self, num_features: Channels, affine: bool = False): ...
+    def __call__(
+        self, input: Tensor[DType, Batch, Channels, Height, Width]
+    ) -> Tensor[DType, Batch, Channels, Height, Width]: ...
+
+class ReLU:
+    def __call__(
+        self, input: Tensor[DType, Batch, Channels, Height, Width]
+    ) -> Tensor[DType, Batch, Channels, Height, Width]: ...
 
 def __getattr__(name) -> Any: ...

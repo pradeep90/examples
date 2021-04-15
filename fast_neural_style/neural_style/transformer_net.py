@@ -84,6 +84,10 @@ class ConvLayer(torch.nn.Module, Generic[InChannels, OutChannels, KernelSize, St
         self.reflection_pad = torch.nn.ReflectionPad2d(reflection_padding)
         self.conv2d = torch.nn.Conv2d(in_channels, out_channels, kernel_size, stride)
 
+    # Note that we have to specify the signature of `__call__` directly -
+    # unfortunately, Pyre can't infer the signature of `__call__` based on
+    # the signature of `forward`.
+    @overload
     def __call__(
             self,
             x: Tensor[DType, Batch, InChannels, Height, Width]
@@ -117,8 +121,13 @@ class ResidualBlock(torch.nn.Module):
         self.in2 = torch.nn.InstanceNorm2d(channels, affine=True)
         self.relu = torch.nn.ReLU()
 
-    # TODO(mrahtz): Figure out why Pyre can't figure this out automatically.
-    def __call__(self, x: Tensor[DType, Batch, Channels, Height, Width]) -> Tensor[DType, Batch, Channels, Height, Width]: ...
+    # Note that, as with `ConvLayer`, we have to specify the signature
+    # here, not `forward`.
+    @overload
+    def __call__(
+            self,
+            x: Tensor[DType, Batch, Channels, Height, Width]
+    ) -> Tensor[DType, Batch, Channels, Height, Width]: ...
 
     def forward(self, x):
         residual = x
@@ -149,6 +158,9 @@ class UpsampleConvLayer(torch.nn.Module, Generic[InChannels, OutChannels, Kernel
         self.reflection_pad = torch.nn.ReflectionPad2d(reflection_padding)
         self.conv2d = torch.nn.Conv2d(in_channels, out_channels, kernel_size, stride)
 
+    # Note that, as with `ConvLayer` and `ResidualBlock`,
+    # we need to specify the signature of `forward` here instead.
+    @overload
     def __call__(
             self,
             input: Tensor[DType, Batch, InChannels, Height, Width]

@@ -27,18 +27,18 @@ class TransformerNet(torch.nn.Module):
         self.relu = torch.nn.ReLU()
 
     def forward(self, X):
-        y = self.relu(self.in1(self.conv1(X)))
-        y = self.relu(self.in2(self.conv2(y)))
-        y = self.relu(self.in3(self.conv3(y)))
-        y = self.res1(y)
-        y = self.res2(y)
-        y = self.res3(y)
-        y = self.res4(y)
-        y = self.res5(y)
-        y = self.relu(self.in4(self.deconv1(y)))
-        y = self.relu(self.in5(self.deconv2(y)))
-        y = self.deconv3(y)
-        return y
+        y1 = self.relu(self.in1(self.conv1(X)))
+        y2 = self.relu(self.in2(self.conv2(y1)))
+        y3 = self.relu(self.in3(self.conv3(y2)))
+        y4 = self.res1(y3)
+        y5 = self.res2(y4)
+        y6 = self.res3(y5)
+        y7 = self.res4(y6)
+        y8 = self.res5(y7)
+        y9 = self.relu(self.in4(self.deconv1(y8)))
+        y10 = self.relu(self.in5(self.deconv2(y9)))
+        y11 = self.deconv3(y10)
+        return y11
 
 
 class ConvLayer(torch.nn.Module):

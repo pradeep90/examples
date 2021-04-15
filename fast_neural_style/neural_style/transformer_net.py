@@ -1,5 +1,5 @@
 from typing import Generic, overload, TypeVar
-from typing_extensions import Literal, TYPE_CHECKING
+from typing_extensions import Literal
 from pyre_extensions import Divide, Add, Multiply
 
 import torch

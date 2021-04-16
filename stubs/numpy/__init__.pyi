@@ -110,3 +110,5 @@ class float32:
 
 class float64:
     pass
+
+loadtxt: Any

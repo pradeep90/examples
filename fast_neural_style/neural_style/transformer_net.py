@@ -45,7 +45,7 @@ class TransformerNet(torch.nn.Module):
         # Non-linearities
         self.relu = torch.nn.ReLU()
 
-    def forward(self, X: Tensor[float, L[1], L[3], L[1080], L[1080]]) -> Tensor[float, L[1], L[3], L[1080], L[1080]]:
+    def forward(self, X: Tensor[float, L[1], L[3], L[1080], L[1080]]) -> Tensor[float, L[1], L[3], L[1060], L[1060]]:
         y1 = self.relu(self.in1(self.conv1(X)))
         y2 = self.relu(self.in2(self.conv2(y1)))
         y3 = self.relu(self.in3(self.conv3(y2)))
@@ -86,9 +86,10 @@ class ConvLayer(torch.nn.Module, Generic[InChannels, OutChannels, KernelSize, St
         DType,
         Batch,
         OutChannels,
-        # (height - kernel_size + 2 * padding) / stride + 1
-        Add[Divide[Add[Add[Height, Multiply[KernelSize, L[-1]]], Multiply[Divide[KernelSize, L[2]], L[2]]], Stride], L[1]],
-        Add[Divide[Add[Add[Width, Multiply[KernelSize, L[-1]]], Multiply[Divide[KernelSize, L[2]], L[2]]], Stride], L[1]],
+        # (height - kernel_size + 2 * padding) / stride + 1, where padding=0 by default
+        Add[Divide[Add[Height, Multiply[KernelSize, L[-1]]], Stride], L[1]],
+        # (width - kernel_size + 2 * padding) / stride + 1, where padding=0 by default
+        Add[Divide[Add[Width, Multiply[KernelSize, L[-1]]], Stride], L[1]],
     ]:
         return super()(x)
 
@@ -96,9 +97,10 @@ class ConvLayer(torch.nn.Module, Generic[InChannels, OutChannels, KernelSize, St
         DType,
         Batch,
         OutChannels,
-        # (height - kernel_size + 2 * padding) / stride + 1
-        Add[Divide[Add[Add[Height, Multiply[KernelSize, L[-1]]], Multiply[Divide[KernelSize, L[2]], L[2]]], Stride], L[1]],
-        Add[Divide[Add[Add[Width, Multiply[KernelSize, L[-1]]], Multiply[Divide[KernelSize, L[2]], L[2]]], Stride], L[1]],
+        # (height - kernel_size + 2 * padding) / stride + 1, where padding=0 by default
+        Add[Divide[Add[Height, Multiply[KernelSize, L[-1]]], Stride], L[1]],
+        # (width - kernel_size + 2 * padding) / stride + 1, where padding=0 by default
+        Add[Divide[Add[Width, Multiply[KernelSize, L[-1]]], Stride], L[1]],
     ]:
         out = self.reflection_pad(x)
         out = self.conv2d(out)
@@ -131,11 +133,19 @@ class ResidualBlock(torch.nn.Module):
         residual = x
         out = self.relu(self.in1(self.conv1(x)))
         out = self.in2(self.conv2(out))
-        # TODO(pradeep)
-        out = out + residual
-        # reveal_type(out.__add__)
+
+        # Batch x Channels x Height-4 x Width-4
+        # reveal_type(out)
+        # Batch x Channels x Height x Width
         # reveal_type(residual)
-        return out
+
+        # Not sure how this is not a runtime error.
+        # REPL:
+        # >>> torch.zeros(1, 2, 10, 10) + torch.zeros(1, 2, 6, 6)
+        # RuntimeError: The size of tensor a (10) must match the size of
+        # tensor b (6) at non-singleton dimension 3
+        out = out + residual  # type: ignore
+        return out  # type: ignore
 
 
 class UpsampleConvLayer(torch.nn.Module, Generic[InChannels, OutChannels, KernelSize, Stride, Upscale]):

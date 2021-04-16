@@ -118,6 +118,19 @@ NOTE: Right now, we are [focusing](https://github.com/pradeep90/pytorch_examples
 
   I'm guessing that Tensor with zero dimensions should be treated as a float.
 
++ Infer literal types after basic arithmetic
+
+  example: we are unable to infer that `reflection_padding` has type `Divide[KernelSize, 2]`. Hence the `ignore` on the next line:
+
+  ```python
+	reflection_padding = kernel_size // 2
+	self.reflection_pad: torch.nn.ReflectionPad2d[Divide[KernelSize, L[2]]] = torch.nn.ReflectionPad2d(reflection_padding)  # type: ignore
+  ```
+
++ Succinct type arithmetic syntax: Right now, `black` splits a big return type across a dozen lines.
+
++ Would be great to have `Subtract[N, M]` instead of `Add[N, Multiply[M, L[-1]]]`.
+
 ## Notes on StackOverflow bugs
 
 From https://github.com/ForeverZyh/TensorFlow-Program-Bugs/blob/master/StackOverflow

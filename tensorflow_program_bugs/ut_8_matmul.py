@@ -25,6 +25,6 @@ a = tf.ones((2, 2))
 b = tf.ones((2, 1))
 
 c = tf.matmul(a, b)
-#reveal_type(c)
+# reveal_type(c)
 # Pyre says:
 #  Revealed type for `c` is `tf.Tensor[tf.float32, typing_extensions.Literal[2], typing_extensions.Literal[1]]`.

@@ -25,6 +25,7 @@ NewDType = TypeVar("NewDType")
 Ts = TypeVarTuple("Ts")
 Ts2 = TypeVarTuple("Ts2")
 
+N = TypeVar("N", bound=int)
 A1 = TypeVar("A1")
 A2 = TypeVar("A2")
 
@@ -75,9 +76,23 @@ class ndarray(_ArrayOrScalarCommon[DType, Unpack[Ts]], Iterable, Sized, Containe
     def astype(self, dtype: Literal["float64"]) -> ndarray[float64, Unpack[Ts]]: ...
     # ===== END `astype` =====
 
+# ===== BEGIN `empty` =====
+# `shape` as tuple, dtype="int64"
+@overload
 def empty(
-    shape: Union[int, Tuple[Unpack[Ts]]], dtype: Union[Type[DType], str]
+    shape: Tuple[Unpack[Ts]], dtype: Literal["int64"]
+) -> ndarray[int64, Unpack[Ts]]: ...
+# `shape` as tuple, dtype as e.g. np.float32
+@overload
+def empty(
+    shape: Tuple[Unpack[Ts]], dtype: Type[DType]
 ) -> ndarray[DType, Unpack[Ts]]: ...
+# `shape` as integer, dtype as e.g. np.float32
+@overload
+def empty(
+    shape: N, dtype: Type[DType]
+) -> ndarray[DType, N]: ...
+# ===== END `empty` =====
 def array(
     object: object,
     dtype: Type[DType] = ...,

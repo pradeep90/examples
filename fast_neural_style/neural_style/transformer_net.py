@@ -31,11 +31,11 @@ class TransformerNet(torch.nn.Module):
         self.conv3: ConvLayer[L[64], L[128], L[3], L[2]] = ConvLayer(64, 128, kernel_size=3, stride=2)
         self.in3: torch.nn.InstanceNorm2d[L[128]] = torch.nn.InstanceNorm2d(128, affine=True)
         # Residual layers
-        self.res1 = ResidualBlock(128)
-        self.res2 = ResidualBlock(128)
-        self.res3 = ResidualBlock(128)
-        self.res4 = ResidualBlock(128)
-        self.res5 = ResidualBlock(128)
+        self.res1: ResidualBlock[L[128]] = ResidualBlock(128)
+        self.res2: ResidualBlock[L[128]] = ResidualBlock(128)
+        self.res3: ResidualBlock[L[128]] = ResidualBlock(128)
+        self.res4: ResidualBlock[L[128]] = ResidualBlock(128)
+        self.res5: ResidualBlock[L[128]] = ResidualBlock(128)
         # Upsampling Layers
         self.deconv1: UpsampleConvLayer[L[128], L[64], L[3], L[1], L[2]] = UpsampleConvLayer(128, 64, kernel_size=3, stride=1, upsample=2)
         self.in4: torch.nn.InstanceNorm2d[L[64]] = torch.nn.InstanceNorm2d(64, affine=True)
@@ -107,7 +107,7 @@ class ConvLayer(torch.nn.Module, Generic[InChannels, OutChannels, KernelSize, St
         return out
 
 
-class ResidualBlock(torch.nn.Module):
+class ResidualBlock(torch.nn.Module, Generic[Channels]):
     """ResidualBlock
     introduced in: https://arxiv.org/abs/1512.03385
     recommended architecture: http://torch.ch/blog/2016/02/04/resnets.html

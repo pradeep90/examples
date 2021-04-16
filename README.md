@@ -52,6 +52,8 @@ NOTE: Right now, we are [focusing](https://github.com/pradeep90/pytorch_examples
 
   Another way is to have a `FiniteList[Unpack[Ts]]`, which has types `Ts` and behaves in all ways like a `Tuple`, except that it is initialized with a `[1, 2, 3]`.
 
++ Similarly, we need a way of inferring the shape of nested Python lists. For example, if `xs = [[0 for _ in range(10)]]`, we should be able to infer it has shape `(1, 10)`.
+
 + Concatenation of multiple variadics
 
   - `argmax`

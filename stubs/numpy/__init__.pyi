@@ -17,11 +17,17 @@ from typing import (
     Union,
 )
 
+from typing_extensions import Literal
 from pyre_extensions import TypeVarTuple, Unpack
 
 DType = TypeVar("DType")
+NewDType = TypeVar("NewDType")
 Ts = TypeVarTuple("Ts")
 Ts2 = TypeVarTuple("Ts2")
+
+N = TypeVar("N", bound=int)
+A1 = TypeVar("A1")
+A2 = TypeVar("A2")
 
 _Shape = Tuple[Unpack[Ts]]
 
@@ -45,6 +51,10 @@ class ndarray(_ArrayOrScalarCommon[DType, Unpack[Ts]], Iterable, Sized, Containe
         strides: Tuple[int, ...] = ...,
         order: Optional[str] = ...,
     ) -> None: ...
+    @overload
+    def __getitem__(self: ndarray[DType, A1, A2], key: Literal[0]) -> ndarray[DType, A2]: ...
+    @overload
+    def __getitem__(self: ndarray[DType, A1, A2], key: Literal[1]) -> ndarray[DType, A1]: ...
     def __setitem__(self, key, value): ...
     @property
     def shape(self) -> Tuple[Unpack[Ts]]: ...
@@ -55,11 +65,34 @@ class ndarray(_ArrayOrScalarCommon[DType, Unpack[Ts]], Iterable, Sized, Containe
     def __add__(self, other) -> ndarray[DType, Unpack[Ts]]: ...
     def __div__(self, other) -> ndarray[DType, Unpack[Ts]]: ...
     def __truediv__(self, other) -> ndarray[DType, Unpack[Ts]]: ...
-    def astype(self, dtype: str) -> ndarray[DType, Unpack[Ts]]: ...
+    # ===== BEGIN `astype` =====
+    @overload
+    def astype(self, dtype: Type[NewDType]) -> ndarray[NewDType, Unpack[Ts]]: ...
+    @overload
+    def astype(self, dtype: Literal["int64"]) -> ndarray[int64, Unpack[Ts]]: ...
+    @overload
+    def astype(self, dtype: Literal["float32"]) -> ndarray[float32, Unpack[Ts]]: ...
+    @overload
+    def astype(self, dtype: Literal["float64"]) -> ndarray[float64, Unpack[Ts]]: ...
+    # ===== END `astype` =====
 
+# ===== BEGIN `empty` =====
+# `shape` as tuple, dtype="int64"
+@overload
 def empty(
-    shape: Union[int, Tuple[Unpack[Ts]]], dtype: Union[Type[DType], str]
+    shape: Tuple[Unpack[Ts]], dtype: Literal["int64"]
+) -> ndarray[int64, Unpack[Ts]]: ...
+# `shape` as tuple, dtype as e.g. np.float32
+@overload
+def empty(
+    shape: Tuple[Unpack[Ts]], dtype: Type[DType]
 ) -> ndarray[DType, Unpack[Ts]]: ...
+# `shape` as integer, dtype as e.g. np.float32
+@overload
+def empty(
+    shape: N, dtype: Type[DType]
+) -> ndarray[DType, N]: ...
+# ===== END `empty` =====
 def array(
     object: object,
     dtype: Type[DType] = ...,
@@ -68,3 +101,12 @@ def array(
     ndmin: int = ...,
 ) -> ndarray[DType, Unpack[Tuple[Any, ...]]]: ...
 def sin(x: ndarray[DType, Unpack[Ts]]) -> ndarray[DType, Unpack[Ts]]: ...
+
+class int64:
+    pass
+
+class float32:
+    pass
+
+class float64:
+    pass

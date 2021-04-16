@@ -18,7 +18,7 @@ from typing import (
 )
 
 from pyre_extensions import TypeVarTuple, Unpack
-from numpy import ndarray
+import numpy as np
 
 Ts = TypeVarTuple("Ts")
 T = TypeVar("T")
@@ -32,17 +32,38 @@ A5 = TypeVar("A5")
 
 N = TypeVar("N", bound=int)
 
-ArrayLike = Union[
-    ndarray[DType, Unpack[Ts]],
-    Tensor[Any, Unpack[Ts]],
-    Variable[Any, Unpack[Ts]],
+TensorLike = Union[
+    Tensor[DType, Unpack[Ts]],
+    Variable[DType, Unpack[Ts]],
 ]
 
 class Variable(Generic[DType, Unpack[Ts]]):
     shape: Tuple[Unpack[Ts]]
+    # If `initial_value` is a `TensorLike`, then we can link its
+    # `DType` to the `DType` of the variable.
+    @overload
     def __init__(
         self,
-        initial_value: ArrayLike[DType, Unpack[Ts]] = ...,
+        initial_value: TensorLike[DType, Unpack[Ts]] = ...,
+        trainable=...,
+        validate_shape=...,
+        caching_device=...,
+        name=...,
+        variable_def=...,
+        dtype: Type[DType] = ...,
+        import_scope=...,
+        constraint=...,
+        synchronization=...,
+        aggregation=...,
+        shape=...,
+    ) -> None: ...
+    # If `initial_value` is an `ndarray`, though, since NumPy
+    # uses different data types to TensorFlow, we should _not_
+    # link its `DType` to the `DType` of the `Variable`.
+    @overload
+    def __init__(
+        self,
+        initial_value: np.ndarray[Any, Unpack[Ts]] = ...,
         trainable=...,
         validate_shape=...,
         caching_device=...,
@@ -72,8 +93,8 @@ class Tensor(Generic[DType, Unpack[Ts]]):
 # Normal matrix multiplication: (A1, A2) x (A2, A3).
 @overload
 def matmul(
-    a: ArrayLike[DType, A1, A2],
-    b: ArrayLike[DType, A2, A3],
+    a: TensorLike[DType, A1, A2],
+    b: TensorLike[DType, A2, A3],
     transpose_a=...,
     transpose_b=...,
     adjoint_a=...,
@@ -82,12 +103,24 @@ def matmul(
     b_is_sparse=...,
     name=...,
 ) -> Tensor[DType, A1, A3]: ...
+@overload
+def matmul(
+    a: np.ndarray[np.float32, A1, A2],
+    b: TensorLike[float32, A2, A3],
+    transpose_a=...,
+    transpose_b=...,
+    adjoint_a=...,
+    adjoint_b=...,
+    a_is_sparse=...,
+    b_is_sparse=...,
+    name=...,
+) -> Tensor[float32, A1, A3]: ...
 
 # (A2, A3) x (A3, A4) with a batch size of A1.
 @overload
 def matmul(
-    a: ArrayLike[DType, A1, A2, A3],
-    b: ArrayLike[DType, A1, A3, A4],
+    a: TensorLike[DType, A1, A2, A3],
+    b: TensorLike[DType, A1, A3, A4],
     transpose_a=...,
     transpose_b=...,
     adjoint_a=...,
@@ -101,8 +134,8 @@ def matmul(
 # with first arg converted to batch size A4 through broadcasting.
 @overload
 def matmul(
-    a: ArrayLike[DType, A1, A2],
-    b: ArrayLike[DType, A4, A2, A3],
+    a: TensorLike[DType, A1, A2],
+    b: TensorLike[DType, A4, A2, A3],
     transpose_a=...,
     transpose_b=...,
     adjoint_a=...,
@@ -132,7 +165,7 @@ def ones(
 def ensure_shape(
     x: Tensor[T, Unpack[Ts]], shape: Tuple[Unpack[Ts]], name: str = ...
 ) -> Tensor[T, Unpack[Ts]]: ...
-def one_hot(indices: ArrayLike[A1], depth: N) -> Tensor[Any, A1, N]: ...
+def one_hot(indices: np.ndarray[np.int32, A1], depth: N) -> Tensor[float32, A1, N]: ...
 
 GradientTape = Any
 reduce_mean = Any

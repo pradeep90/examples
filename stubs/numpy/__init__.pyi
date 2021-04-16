@@ -77,5 +77,11 @@ def array(
 ) -> ndarray[DType, Unpack[Tuple[Any, ...]]]: ...
 def sin(x: ndarray[DType, Unpack[Ts]]) -> ndarray[DType, Unpack[Ts]]: ...
 
+class int64:
+    pass
+
 class float32:
+    pass
+
+class float64:
     pass

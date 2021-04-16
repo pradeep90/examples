@@ -2,10 +2,6 @@ import sys
 import tensorflow as tf
 import numpy
 
-assert tf.__version__ == "1.8.0"
-tf.set_random_seed(20180130)
-numpy.random.seed(20180130)
-
 rng = numpy.random
 
 # Parameters
@@ -27,6 +23,7 @@ display_step = 50
 
 f = open("ut_10_data.csv")
 data = numpy.loadtxt(f, delimiter=",")
+data = data.astype(numpy.float32)
 
 train_X = data[:60000, :-1]
 train_Y = data[:60000, -1]
@@ -43,47 +40,50 @@ n_samples = train_X.shape[0]
 
 print(n_input)
 
-# tf Graph Input
-X = tf.placeholder(tf.float32, [n_input])
-Y = tf.placeholder(tf.float32)
-
 # Create Model
 
 # Set model weights
 W = tf.Variable(tf.zeros([6]), name="weight")
 b = tf.Variable(tf.zeros([1]), name="bias")
 
-# Construct a linear model
-activation = tf.add(tf.multiply(X, W), b)
+optimizer = tf.keras.optimizers.SGD(learning_rate)
 
-# Minimize the squared errors
-cost = tf.reduce_sum(tf.pow(activation - Y, 2)) / (2 * n_samples)  # L2 loss
-optimizer = tf.train.GradientDescentOptimizer(learning_rate).minimize(cost)  # Gradient descent
+@tf.function
+def compute_activation(X, Y):
+    # Construct a linear model
+    activation = tf.add(tf.multiply(X, W), b)
+    return activation
 
-# Initializing the variables
-init = tf.initialize_all_variables()
+@tf.function
+def compute_cost(X, Y):
+    activation = compute_activation(X, Y)
+    # Minimize the squared errors
+    cost = tf.reduce_sum(tf.pow(activation - Y, 2)) / (2 * n_samples)  # L2 loss
+    return cost
 
-# Launch the graph
-with tf.Session() as sess:
-    sess.run(init)
+@tf.function
+def step(x, y):
+    with tf.GradientTape() as tape:
+        cost = compute_cost(x, y)
+    grads = tape.gradient(cost, (W, b))
+    optimizer.apply_gradients(zip(grads, (W, b)))
 
-    # Fit all training data
-    for epoch in range(training_epochs):
-        for (x, y) in zip(train_X, train_Y):
-            sess.run(optimizer, feed_dict={X: x, Y: y})
+# Fit all training data
+for epoch in range(training_epochs):
+    for (x, y) in zip(train_X, train_Y):
+        step(x, y)
 
-        # Display logs per epoch step
-        if epoch % display_step == 0:
-            print("Epoch:", '%04d' % (epoch + 1), "cost=",
-                  "{:.9f}".format(sess.run(cost, feed_dict={X: train_X, Y: train_Y})),
-                  "W=", sess.run(W), "b=", sess.run(b))
+    # Display logs per epoch step
+    if epoch % display_step == 0:
+        print("Epoch:", '%04d' % (epoch + 1), "cost=",
+              "{:.9f}".format(compute_cost(train_X, train_Y),
+              "W=", W, "b=", b))
 
-    print("Optimization Finished!")
-    training_cost = sess.run(cost, feed_dict={X: train_X, Y: train_Y})
-    print("Training cost=", training_cost, "W=", sess.run(W), "b=", sess.run(b), '\n')
+print("Optimization Finished!")
+training_cost = compute_cost(train_X, train_Y)
+print("Training cost=", training_cost, "W=", W, "b=", b, '\n')
 
-    print("Testing... (L2 loss Comparison)")
-    testing_cost = sess.run(tf.reduce_sum(tf.pow(activation - Y, 2)) / (2 * test_X.shape[0]),
-                            feed_dict={X: test_X, Y: test_Y})  # same function as cost above
-    print("Testing cost=", testing_cost)
-    print("Absolute l2 loss difference:", abs(training_cost - testing_cost))
+print("Testing... (L2 loss Comparison)")
+testing_cost = tf.reduce_sum(tf.pow(compute_activation(test_X, test_Y) - test_Y, 2)) / (2 * test_X.shape[0])
+print("Testing cost=", testing_cost)
+print("Absolute l2 loss difference:", abs(training_cost - testing_cost))

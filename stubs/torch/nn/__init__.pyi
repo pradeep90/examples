@@ -102,7 +102,7 @@ class ReflectionPad2d(Generic[Padding]):
         Add[Add[Width, Padding], Padding],
     ]: ...
 
-class InstanceNorm2d:
+class InstanceNorm2d(Generic[Channels]):
     def __init__(self, num_features: Channels, affine: bool = False) -> None: ...
     def __call__(
         self, input: Tensor[DType, Batch, Channels, Height, Width]

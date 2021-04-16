@@ -74,7 +74,7 @@ class Conv2d(Generic[InChannels, OutChannels, KernelSize, Stride]):
         out_channels: OutChannels,
         kernel_size: KernelSize,
         stride: Stride,
-    ): ...
+    ) -> None: ...
     def __call__(
         self, input: Tensor[DType, Batch, InChannels, Height, Width]
     ) -> Tensor[
@@ -90,7 +90,7 @@ class ReflectionPad2d(Generic[Padding]):
     def __init__(
         self,
         padding: Padding,
-    ): ...
+    ) -> None: ...
     def __call__(
         self,
         input: Tensor[DType, Batch, Channels, Height, Width],
@@ -103,7 +103,7 @@ class ReflectionPad2d(Generic[Padding]):
     ]: ...
 
 class InstanceNorm2d:
-    def __init__(self, num_features: Channels, affine: bool = False): ...
+    def __init__(self, num_features: Channels, affine: bool = False) -> None: ...
     def __call__(
         self, input: Tensor[DType, Batch, Channels, Height, Width]
     ) -> Tensor[DType, Batch, Channels, Height, Width]: ...

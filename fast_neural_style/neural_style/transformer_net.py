@@ -1,3 +1,4 @@
+# pyre-strict
 from typing import Generic, TypeVar
 from typing_extensions import Literal as L
 from pyre_extensions import Divide, Add, Multiply
@@ -67,11 +68,13 @@ class ConvLayer(torch.nn.Module, Generic[InChannels, OutChannels, KernelSize, St
             out_channels: OutChannels,
             kernel_size: KernelSize,
             stride: Stride,
-    ):
+    ) -> None:
         super(ConvLayer, self).__init__()
         reflection_padding = kernel_size // 2
-        self.reflection_pad = torch.nn.ReflectionPad2d(reflection_padding)
-        self.conv2d = torch.nn.Conv2d(in_channels, out_channels, kernel_size, stride)
+        self.reflection_pad: torch.nn.ReflectionPad2d[Divide[KernelSize, L[2]]] = torch.nn.ReflectionPad2d(reflection_padding)  # type: ignore
+        self.conv2d: torch.nn.Conv2d[InChannels, OutChannels, KernelSize, Stride] = torch.nn.Conv2d(
+            in_channels, out_channels, kernel_size, stride
+        )
 
     # Note that we have to specify the signature of `__call__` directly -
     # unfortunately, Pyre can't infer the signature of `__call__` based on
@@ -86,11 +89,17 @@ class ConvLayer(torch.nn.Module, Generic[InChannels, OutChannels, KernelSize, St
         # (height - kernel_size + 2 * padding) / stride + 1
         Add[Divide[Add[Add[Height, Multiply[KernelSize, L[-1]]], Multiply[Divide[KernelSize, L[2]], L[2]]], Stride], L[1]],
         Add[Divide[Add[Add[Width, Multiply[KernelSize, L[-1]]], Multiply[Divide[KernelSize, L[2]], L[2]]], Stride], L[1]],
-
     ]:
         return super()(x)
 
-    def forward(self, x):
+    def forward(self, x: Tensor[DType, Batch, InChannels, Height, Width]) -> Tensor[
+        DType,
+        Batch,
+        OutChannels,
+        # (height - kernel_size + 2 * padding) / stride + 1
+        Add[Divide[Add[Add[Height, Multiply[KernelSize, L[-1]]], Multiply[Divide[KernelSize, L[2]], L[2]]], Stride], L[1]],
+        Add[Divide[Add[Add[Width, Multiply[KernelSize, L[-1]]], Multiply[Divide[KernelSize, L[2]], L[2]]], Stride], L[1]],
+    ]:
         out = self.reflection_pad(x)
         out = self.conv2d(out)
         return out
@@ -102,7 +111,7 @@ class ResidualBlock(torch.nn.Module):
     recommended architecture: http://torch.ch/blog/2016/02/04/resnets.html
     """
 
-    def __init__(self, channels: Channels):
+    def __init__(self, channels: Channels) -> None:
         super(ResidualBlock, self).__init__()
         self.conv1: ConvLayer[Channels, Channels, L[3], L[1]] = ConvLayer(channels, channels, kernel_size=3, stride=1)
         self.in1 = torch.nn.InstanceNorm2d(channels, affine=True)
@@ -118,11 +127,14 @@ class ResidualBlock(torch.nn.Module):
     ) -> Tensor[DType, Batch, Channels, Height, Width]:
         return super()(x)
 
-    def forward(self, x):
+    def forward(self, x: Tensor[DType, Batch, Channels, Height, Width]) -> Tensor[DType, Batch, Channels, Height, Width]:
         residual = x
         out = self.relu(self.in1(self.conv1(x)))
         out = self.in2(self.conv2(out))
+        # TODO(pradeep)
         out = out + residual
+        # reveal_type(out.__add__)
+        # reveal_type(residual)
         return out
 
 
@@ -140,12 +152,12 @@ class UpsampleConvLayer(torch.nn.Module, Generic[InChannels, OutChannels, Kernel
             kernel_size: KernelSize,
             stride: Stride,
             upsample: Upscale,
-    ):
+    ) -> None:
         super(UpsampleConvLayer, self).__init__()
         self.upsample = upsample
         reflection_padding = kernel_size // 2
-        self.reflection_pad = torch.nn.ReflectionPad2d(reflection_padding)
-        self.conv2d = torch.nn.Conv2d(in_channels, out_channels, kernel_size, stride)
+        self.reflection_pad: torch.nn.ReflectionPad2d[Divide[KernelSize, L[2]]] = torch.nn.ReflectionPad2d(reflection_padding)  # type: ignore
+        self.conv2d: torch.nn.Conv2d[InChannels, OutChannels, KernelSize, Stride] = torch.nn.Conv2d(in_channels, out_channels, kernel_size, stride)
 
     # Note that, as with `ConvLayer` and `ResidualBlock`,
     # we need to specify the signature of `forward` here instead.
@@ -161,7 +173,13 @@ class UpsampleConvLayer(torch.nn.Module, Generic[InChannels, OutChannels, Kernel
     ]:
         return super()(input)
 
-    def forward(self, x):
+    def forward(self, x: Tensor[DType, Batch, InChannels, Height, Width]) -> Tensor[
+        DType,
+        Batch,
+        OutChannels,
+        Multiply[Height, Upscale],
+        Multiply[Width, Upscale]
+    ]:
         x_in = x
         if self.upsample:
             x_in = torch.nn.functional.interpolate(

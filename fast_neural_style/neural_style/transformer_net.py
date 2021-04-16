@@ -1,4 +1,4 @@
-from typing import Generic, overload, TypeVar
+from typing import Generic, TypeVar
 from typing_extensions import Literal
 from pyre_extensions import Divide, Add, Multiply
 
@@ -87,7 +87,6 @@ class ConvLayer(torch.nn.Module, Generic[InChannels, OutChannels, KernelSize, St
     # Note that we have to specify the signature of `__call__` directly -
     # unfortunately, Pyre can't infer the signature of `__call__` based on
     # the signature of `forward`.
-    @overload
     def __call__(
             self,
             x: Tensor[DType, Batch, InChannels, Height, Width]
@@ -99,7 +98,8 @@ class ConvLayer(torch.nn.Module, Generic[InChannels, OutChannels, KernelSize, St
         Add[Divide[Add[Add[Height, Multiply[KernelSize, Literal[-1]]], Multiply[Divide[KernelSize, Literal[2]], Literal[2]]], Stride], Literal[1]],
         Add[Divide[Add[Add[Width, Multiply[KernelSize, Literal[-1]]], Multiply[Divide[KernelSize, Literal[2]], Literal[2]]], Stride], Literal[1]],
 
-    ]: ...
+    ]:
+        return super()(x)
 
     def forward(self, x):
         out = self.reflection_pad(x)
@@ -123,11 +123,11 @@ class ResidualBlock(torch.nn.Module):
 
     # Note that, as with `ConvLayer`, we have to specify the signature
     # here, not `forward`.
-    @overload
     def __call__(
             self,
             x: Tensor[DType, Batch, Channels, Height, Width]
-    ) -> Tensor[DType, Batch, Channels, Height, Width]: ...
+    ) -> Tensor[DType, Batch, Channels, Height, Width]:
+        return super()(x)
 
     def forward(self, x):
         residual = x
@@ -160,7 +160,6 @@ class UpsampleConvLayer(torch.nn.Module, Generic[InChannels, OutChannels, Kernel
 
     # Note that, as with `ConvLayer` and `ResidualBlock`,
     # we need to specify the signature of `forward` here instead.
-    @overload
     def __call__(
             self,
             input: Tensor[DType, Batch, InChannels, Height, Width]
@@ -170,7 +169,8 @@ class UpsampleConvLayer(torch.nn.Module, Generic[InChannels, OutChannels, Kernel
         OutChannels,
         Multiply[Height, Upscale],
         Multiply[Width, Upscale]
-    ]: ...
+    ]:
+        return super()(input)
 
     def forward(self, x):
         x_in = x

@@ -2,8 +2,6 @@ import sys
 import tensorflow as tf
 import numpy
 
-rng = numpy.random
-
 # Parameters
 learning_rate = 0.01
 training_epochs = 2000
@@ -43,8 +41,8 @@ print(n_input)
 # Create Model
 
 # Set model weights
-W = tf.Variable(tf.zeros([6]), name="weight")
-b = tf.Variable(tf.zeros([1]), name="bias")
+W = tf.Variable(tf.zeros((6,)), name="weight")
+b = tf.Variable(tf.zeros((1,)), name="bias")
 
 optimizer = tf.keras.optimizers.SGD(learning_rate)
 

@@ -1,3 +1,11 @@
+"""UT-9
+
+Adapted to TensorFlow 2 from
+https://github.com/ForeverZyh/TensorFlow-Program-Bugs/blob/master/StackOverflow/UT-9/40574552-buggy/neural.py
+which, in turn, is originally from
+https://stackoverflow.com/questions/40574552/invalidargumenterror-in-tensorflow
+"""
+
 import tensorflow as tf
 import numpy as np
 import random

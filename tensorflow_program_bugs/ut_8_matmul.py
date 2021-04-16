@@ -1,3 +1,11 @@
+"""UT-8
+
+Adapted to TensorFlow 2 from
+https://github.com/ForeverZyh/TensorFlow-Program-Bugs/blob/master/StackOverflow/UT-8/34908033-buggy/multiply.py
+which, in turn, is originally from
+https://stackoverflow.com/questions/34908033/valueerror-when-performing-matmul-with-tensorflow
+"""
+
 import tensorflow as tf
 
 

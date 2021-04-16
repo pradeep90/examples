@@ -31,14 +31,13 @@ def randint(
 ) -> ndarray[DType, N]: ...
 # ===== END `randint` ======
 
-# ===== Begin normal =====
+# ===== BEGIN `normal` =====
 @overload
 def normal(loc: Number, scale: Number, size: None = None) -> float: ...
 @overload
 def normal(
     loc: Number, scale: Number, size: Tuple[Unpack[Ts]]
-) -> ndarray[np.float32, Unpack[Ts]]: ...
-
-# ===== End normal =====
+) -> ndarray[float64, Unpack[Ts]]: ...
+# ===== END `normal` =====
 
 seed: Any = ...

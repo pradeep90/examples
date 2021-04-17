@@ -41,6 +41,7 @@ for _ in range(100):
         #  `tf.Tensor[Variable[tf.nn.Batch (bound to int)], Variable[tf.nn.Features (bound to int)]]`
         #  for 1st parameter `logits` to call `tf.nn.softmax_cross_entropy_with_logits` but got
         # `tf.Tensor[int, int]`.
+        # TODO(mrahtz): Pyre has stopped producing this error...?
 
         # Possible correction 1:
         ys_onehot = tf.one_hot(ys[0], num_classes)

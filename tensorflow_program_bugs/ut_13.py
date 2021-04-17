@@ -1,8 +1,5 @@
 import tensorflow as tf
 
-assert tf.__version__ == "1.8.0"
-tf.set_random_seed(20180130)
-
 ############################################################
 '''
     dummy data
@@ -12,17 +9,11 @@ y_data = [[0], [1], [1], [0]]
 
 ############################################################
 '''
-    Input and output
-'''
-X = tf.placeholder(tf.float32, shape=[4, 2], name='x')
-Y = tf.placeholder(tf.float32, shape=[4, 1], name='y')
-
-'''
     Network parameters
 '''
-W = tf.Variable(tf.random_uniform([2, 2], -1, 1), name='W')
+W = tf.Variable(tf.random.uniform([2, 2], -1, 1), name='W')
 c = tf.Variable(tf.zeros([2]), name='c')
-w = tf.Variable(tf.random_uniform([2, 1], -1, 1), name='w')
+w = tf.Variable(tf.random.uniform([2, 1], -1, 1), name='w')
 b = tf.Variable(tf.zeros([1]), name='b')
 
 ############################################################
@@ -32,30 +23,40 @@ b = tf.Variable(tf.zeros([1]), name='b')
     function: Yhat = (w (x'W + c) + b)
     loss    : \sum_i Y * log Yhat
 '''
-H1 = tf.matmul(X, W) + c
-Yhat1 = tf.matmul(H1, w) + b
 
-cross_entropy1 = tf.reduce_mean(tf.square(Y - Yhat1))
+def compute_prediction(X):
+    H1 = tf.matmul(X, W) + c
+    Yhat1 = tf.matmul(H1, w) + b
+    return Yhat1
 
-step1 = tf.train.AdamOptimizer(0.01).minimize(cross_entropy1)
+optimizer = tf.keras.optimizers.Adam(0.01)
+
+def train_step(X, Y):
+    with tf.GradientTape() as tape:
+        Yhat1 = compute_prediction(X)
+        cross_entropy1 = tf.reduce_mean(tf.square(Y - Yhat1))
+    grads = tape.gradient(cross_entropy1, (W, c, w, b))
+    optimizer.apply_gradients(zip(grads, (W, c, w, b)))
+    return Yhat1, cross_entropy1
 
 '''
     Train
 '''
 
-graph1 = tf.initialize_all_variables()
-sess1 = tf.Session()
-sess1.run(graph1)
-
 for i in range(100):
-    _, loss, yhat = sess1.run([step1, cross_entropy1, Yhat1], feed_dict={X: x_data, Y: y_data})
+    yhat, loss = train_step(x_data, y_data)
     print("loss %g" % loss)
     print(yhat)
 
 '''
     Evaluation
 '''
-corrects = tf.equal(tf.argmax(Y, 1), tf.argmax(Yhat1, 1))
-accuracy = tf.reduce_mean(tf.cast(corrects, tf.float32))
-r = sess1.run(accuracy, feed_dict={X: x_data, Y: y_data})
+
+def compute_accuracy(X, Y):
+    Yhat1 = compute_prediction(X)
+    corrects = tf.equal(tf.argmax(Y, 1), tf.argmax(Yhat1, 1))
+    accuracy = tf.reduce_mean(tf.cast(corrects, tf.float32))
+    return accuracy
+
+r = compute_accuracy(x_data, y_data)
 print('accuracy: ' + str(r * 100) + '%')

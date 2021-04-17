@@ -26,10 +26,10 @@ y_data = [[0], [1], [1], [0]]
 '''
     Network parameters
 '''
-W = tf.Variable(tf.random.uniform([2, 2], -1, 1), name='W')
-c = tf.Variable(tf.zeros([2]), name='c')
-w = tf.Variable(tf.random.uniform([2, 1], -1, 1), name='w')
-b = tf.Variable(tf.zeros([1]), name='b')
+W = tf.Variable(tf.random.uniform((2, 2), -1, 1), name='W')
+c = tf.Variable(tf.zeros((2,)), name='c')
+w = tf.Variable(tf.random.uniform((2, 1), -1, 1), name='w')
+b = tf.Variable(tf.zeros((1,)), name='b')
 
 ############################################################
 '''

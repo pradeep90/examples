@@ -144,10 +144,6 @@ From https://github.com/ForeverZyh/TensorFlow-Program-Bugs/blob/master/StackOver
 
 + UT-4 - this seems to be based on TensorFlow v1 style of `placeholder` code. That seems to be deprecated in v2. I narrowed it down to the parts that caused the shape errors.
 
-### UT-10
-
-This is a trivial error due to a tensor-placeholder size mismatch. This is unlikely to be interesting to many people, since barely anyone is writing new code using TensorFlow 1 these days.
-
 ### UT-11
 
 Another trivial tensor-placeholder size mismatch.

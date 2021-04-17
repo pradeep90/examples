@@ -1,3 +1,44 @@
+"""UT-10
+
+Adapted to TensorFlow 2 from
+https://github.com/ForeverZyh/TensorFlow-Program-Bugs/blob/master/StackOverflow/UT-10/36343542-buggy/tflin.py
+which, in turn, is originally from
+https://stackoverflow.com/questions/36343542/tensorflow-shape-error-in-feed-dict
+
+There are actually two bugs in this program.
+
+The immediate bug is that while `compute_cost` can be called on a single
+example without issue, when called on the whole of `train_X` and `train_Y`,
+we get the following error at runtime:
+
+    ValueError: Dimensions must be equal, but are 6 and 60000 for
+    '{{node sub}} = Sub[T=DT_FLOAT](StatefulPartitionedCall, Y)'
+    with input shapes: [60000,6], [60000].
+
+This occurs while trying to compute the error between the prediction
+and the true label, `activation - Y`. This works when `compute_cost`
+is being called with only a single example, because there,
+`X` has shape `(6,)`, so `activation` ends up also having shape `(6,)`,
+and `Y` has shape `()`, so the operation succeeds through broadcasting.
+
+But that brings us to the second bug: if each label is a scalar, then
+`activation` should be a scalar too, not shape `(6,)`! It turns out
+that `compute_activation` is broken too: it should be doing a dot product
+between the weight `W` and the feature vector(s) `X`, but it's actually
+doing point-wise multiplication. (As it happens, though, when the first bug
+is fixed, training probably still succeeds, because the sum is done later
+in `compute_cost` by `reduce_sum`.)
+
+Can we detect the second bug 'for free' with shape-typing (that is, purely with
+shape-stubs for TensorFlow, but without adding extra type annotations to this
+code)? I don't think so; this is just a case where the user has accidentally
+implemented the algorithm incorrectly.
+
+Can we detect the first bug with typing? Unfortunately, I don't think so either:
+in Pyre, at least, inside `compute_cost` we don't know the shape of `X` and `Y`
+unless we annotate their expected types specifically.
+"""
+
 import sys
 import tensorflow as tf
 import numpy

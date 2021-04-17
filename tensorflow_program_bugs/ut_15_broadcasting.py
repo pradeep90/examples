@@ -1,3 +1,11 @@
+"""UT-15
+
+Adapted to TensorFlow 2 from
+https://github.com/ForeverZyh/TensorFlow-Program-Bugs/blob/master/StackOverflow/UT-15/38447935-buggy/fitting.py
+which, in, is originally from
+https://stackoverflow.com/questions/38447935/tensorflow-model-always-produces-mean
+"""
+
 import tensorflow as tf
 
 

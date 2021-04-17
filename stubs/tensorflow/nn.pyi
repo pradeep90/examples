@@ -1,5 +1,5 @@
 import numpy as np
-from typing import overload, TypeVar, Union
+from typing import Optional, overload, TypeVar, Union
 from tensorflow import int32, int64, Tensor
 
 DType = TypeVar("DType")
@@ -28,3 +28,7 @@ def sparse_softmax_cross_entropy_with_logits(
     labels: Tensor[Union[int32, int64], Batch], logits: Tensor[DType, Batch, Features]
 ) -> Tensor[DType, Batch]: ...
 # ===== END `softmax_cross_entropy_with_logits` =====
+def relu(
+    features: Tensor[DType, Unpack[Ts]], name: Optional[str] = None
+) -> Tensor[DType, Unpack[Ts]]: ...
+def dropout(x: Tensor[DType, Unpack[Ts]], rate: float) -> Tensor[DType, Unpack[Ts]]: ...

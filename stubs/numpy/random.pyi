@@ -41,3 +41,4 @@ def normal(
 # ===== END `normal` =====
 
 seed: Any = ...
+uniform: Any

@@ -21,6 +21,7 @@ from pyre_extensions import TypeVarTuple, Unpack
 import numpy as np
 
 Ts = TypeVarTuple("Ts")
+NewShape = TypeVarTuple("NewShape")
 T = TypeVar("T")
 DType = TypeVar("DType")
 
@@ -169,6 +170,11 @@ def ensure_shape(
 def one_hot(indices: np.ndarray[np.int32, A1], depth: N) -> Tensor[float32, A1, N]: ...
 def reduce_sum(x: Tensor[DType, Unpack[Ts]]) -> Tensor[DType]: ...
 def pow(x: Tensor[DType, Unpack[Ts]], y: int) -> Tensor[DType, Unpack[Ts]]: ...
+def reshape(
+    tensor: Tensor[DType, Unpack[Ts]], shape: Tuple[Unpack[NewShape]]
+) -> Tensor[DType, Unpack[NewShape]]: ...
+def constant(value: float, shape: Tuple[Unpack[Ts]]) -> Tensor[float32, Unpack[Ts]]: ...
 
 GradientTape = Any
 reduce_mean = Any
+function: Any

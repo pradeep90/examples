@@ -103,12 +103,14 @@ def array(
 def sin(x: ndarray[DType, Unpack[Ts]]) -> ndarray[DType, Unpack[Ts]]: ...
 
 class int64:
-    pass
+    def __init__(self, value=...): ...
 
 class float32:
-    pass
+    def __init__(self, value=...): ...
 
 class float64:
-    pass
+    def __init__(self, value=...): ...
 
 loadtxt: Any
+asarray: Any
+zeros: Any

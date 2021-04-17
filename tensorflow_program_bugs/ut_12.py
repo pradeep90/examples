@@ -1,3 +1,11 @@
+"""UT-12
+
+Adapted to TensorFlow 2 from
+https://github.com/ForeverZyh/TensorFlow-Program-Bugs/blob/master/StackOverflow/UT-12/43285733-buggy/mnist.py
+which, in turn, is originally from
+https://stackoverflow.com/questions/43285733/incompatible-shapes-on-tensorflow
+"""
+
 import tensorflow as tf
 import pandas as pd
 import numpy as np

@@ -1,3 +1,18 @@
+"""UT-13
+
+Adapted to TensorFlow 2 from
+https://github.com/ForeverZyh/TensorFlow-Program-Bugs/blob/master/StackOverflow/UT-13/42191656-buggy/linear.py
+which, in turn, is originally from
+https://stackoverflow.com/questions/42191656/tensorflow-learning-xor-with-linear-function-even-though-it-shouldnt
+
+The bug here lies in `compute_accuracy`, where we try to compute whether the
+prediction is correct by comparing the argmax of the predicted vector to
+the argmax of the ground-truth vector. Unfortunately, both the predicted
+vector and the ground-truth vector have a length of 1, so this always succeeds.
+
+I don't think we can catch the error here with type checking.
+"""
+
 import tensorflow as tf
 
 ############################################################

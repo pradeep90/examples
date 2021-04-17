@@ -146,7 +146,7 @@ From https://github.com/ForeverZyh/TensorFlow-Program-Bugs/blob/master/StackOver
 
 ### UT-11
 
-Another trivial tensor-placeholder size mismatch.
+This is purely a tensor-placeholder size mismatch bug, which probably isn't that interesting to cover since so few folks use TensorFlow 1 these days.
 
 ### UT-12
 

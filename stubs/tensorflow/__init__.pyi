@@ -3,6 +3,7 @@ from typing import (
     Generic,
     overload,
     Container,
+    List,
     Iterable,
     Sized,
     SupportsInt,
@@ -175,7 +176,12 @@ def pow(x: Tensor[DType, Unpack[Ts]], y: int) -> Tensor[DType, Unpack[Ts]]: ...
 def reshape(
     tensor: Tensor[DType, Unpack[Ts]], shape: Tuple[Unpack[NewShape]]
 ) -> Tensor[DType, Unpack[NewShape]]: ...
-def constant(value: float, shape: Tuple[Unpack[Ts]]) -> Tensor[float32, Unpack[Ts]]: ...
+# ===== BEGIN `constant ======
+@overload
+def constant(value: float, dtype: Optional[Any] = ..., shape: Tuple[Unpack[Ts]]) -> Tensor[float32, Unpack[Ts]]: ...
+@overload
+def constant(value: List, dtype: Optional[Any] = ...) -> Tensor: ...
+# ===== END `constant ======
 
 GradientTape = Any
 reduce_mean = Any

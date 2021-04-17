@@ -104,7 +104,7 @@ for i in range(20000):
     if i % 100 == 0:
         train_accuracy = compute_accuracy(batch_x, batch_y, keep_prob=1.0)
         print("step %d, training accuracy %g" % (i, train_accuracy))
-    train-step(Xtr[offset:(offset + batch_size), :],
+    train_step(Xtr[offset:(offset + batch_size), :],
                Ytr[offset:(offset + batch_size), :],
                keep_prob=0.5)
 

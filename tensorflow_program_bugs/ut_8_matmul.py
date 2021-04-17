@@ -12,7 +12,8 @@ import tensorflow as tf
 a = tf.ones((2, 2))
 
 # Broken:
-# b = tf.ones((2,))
+b = tf.ones((2,))
+c = tf.matmul(a, b)  # pyre-fixme[6]
 # TensorFlow says:
 #  InvalidArgumentError: In[0] and In[1] has different ndims: [2,2] vs. [2] [Op:MatMul]
 # Pyre says:
@@ -23,8 +24,6 @@ a = tf.ones((2, 2))
 
 # Correct:
 b = tf.ones((2, 1))
-
 c = tf.matmul(a, b)
-# reveal_type(c)
-# Pyre says:
+# With `reveal_type(c)`, Pyre says:
 #  Revealed type for `c` is `tf.Tensor[tf.float32, typing_extensions.Literal[2], typing_extensions.Literal[1]]`.

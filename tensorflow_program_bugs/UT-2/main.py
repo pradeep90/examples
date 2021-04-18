@@ -1,8 +1,3 @@
-# UT-2 adapted from
-# https://github.com/ForeverZyh/TensorFlow-Program-Bugs/blob/master/StackOverflow/UT-2/43067338-buggy/multiplication.py
-# in turn from
-# https://stackoverflow.com/questions/43067338/tensor-multiplication-in-tensorflow
-
 from typing_extensions import Literal
 
 import numpy as np

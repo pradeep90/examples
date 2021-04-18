@@ -1,6 +1,3 @@
-# UT-4 from
-# https://github.com/ForeverZyh/TensorFlow-Program-Bugs/blob/master/StackOverflow/UT-4/44124668-buggy/experiment.py
-
 import tensorflow as tf
 import numpy as np
 from typing_extensions import Literal as L

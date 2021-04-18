@@ -1,0 +1,1 @@
+From [TensorFlow-Program-Bugs/StackOverflow/UT-4/](https://github.com/ForeverZyh/TensorFlow-Program-Bugs/blob/master/StackOverflow/UT-4/44124668-buggy/experiment.py), based on [stackoverflow/44124668](https://stackoverflow.com/questions/44124668/valueerror-cannot-feed-value-of-shape-50-for-tensor-uplaceholder-10-whic).

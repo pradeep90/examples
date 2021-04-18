@@ -63,9 +63,7 @@ Batch = TypeVar("Batch", bound=int)
 Height = TypeVar("Height", bound=int)
 Width = TypeVar("Width", bound=int)
 Channels = TypeVar("Channels", bound=int)
-# We don't bind this to `int`, because `transformer_net` uses
-# `padding=kernel_size // 2`, which is a `pyre_extensions.IntExpression`.
-Padding = TypeVar("Padding")
+Padding = TypeVar("Padding", bound=int)
 
 class Conv2d(Generic[InChannels, OutChannels, KernelSize, Stride]):
     def __init__(

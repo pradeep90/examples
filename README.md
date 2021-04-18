@@ -8,7 +8,7 @@ NOTE: Right now, we are [focusing](https://github.com/pradeep90/pytorch_examples
 
 # Catching Tensor Shape Errors using the Typechecker
 
-## TODO
+## Bugs in Pyre
 
 + Add `"strict": true` to `.pyre_configuration`.
 
@@ -35,6 +35,39 @@ NOTE: Right now, we are [focusing](https://github.com/pradeep90/pytorch_examples
 	```
 
 	It works out of the box in [Mypy](https://mypy-play.net/?mypy=latest&python=3.8&gist=08d857dc4403457f3a72ccdfbea6d0f0). Pyre does recognize the correct type but it doesn't automatically use it: `Attribute __call__ of class Sequence has type ... but no type is specified`. And I couldn't just write the `Callable` type because it has overloads and Python by itself doesn't have syntax for that (plus, it'd be really ugly). Maybe we can special-case `__call__`.
+
++ Fix bug in type arithmetic: Bug in Pyre where `N + 1 - 1` is not treated as compatible with `N`.
+
+```
+from typing import Generic, TypeVar
+from pyre_extensions import TypeVarTuple, Add
+from typing_extensions import Literal as L
+
+Height = TypeVar("Height", bound=int)
+
+def foo(x: Height) -> Add[Add[Height, L[-1]], L[1]]: ...
+
+def bar(x: Height) -> Height:
+  return foo(x)
+
+Incompatible return type [7]: Expected `Variable[Height (bound to int)]` but got `Variable[Height (bound to int)]`.
+
+debug data:
+
+120 2021-04-17 23:55:00 DUMP solve: start - Variable[test.Height (bound to int)] <: Variable[test.Height (bound to int)]
+    121 (IntExpression
+    122  (((constant_factor 1)
+    123    (variables
+    124     (((variable
+    125        (Variable
+    126         ((variable test.Height) (constraints (Bound (Primitive int)))
+    127          (variance Invariant) (state InFunction) (namespace 0))))
+    128       (degree 1))))))) <: (Variable
+    129  ((variable test.Height) (constraints (Bound (Primitive int)))
+    130   (variance Invariant) (state InFunction) (namespace 0)));
+    131 constraints: {
+    132 Have Fallbacks to Any: ()}
+```
 
 ## Gotchas
 
@@ -67,8 +100,6 @@ NOTE: Right now, we are [focusing](https://github.com/pradeep90/pytorch_examples
 	However, from my search of large codebases, almost all calls to `tensor.size(...)` used either axis=0, 1, 2, or 3. So, we can readily handle this with overloads.
 
 + Broadcasting - this is intended to be part of type arithmetic, but the relevant code has not yet landed in Pyre.
-
-+ Better error messages. They are pretty arcane now.
 
 + Would be great to bind a type variable based on a default value. Otherwise, we have to add an overload for the default value.
 
@@ -168,3 +199,71 @@ So yeah, however we slice this one, I don't think we can do anything useful :(
 The problem here is caused by a comparison to `argmax(Y)` instead of `Y` (a scalar) itself.
 
 I don't think we can catch this with static shape analysis. It doesn't produce a runtime error; it's valid code, but it just does the wrong thing. I think this code has been copy-pasted from a different example without the programmer really understanding what was going on.
+
+# Need for Better Error Messages
+
+They are pretty arcane now.
+
++ Doesn't show the existing literal types bound. It shows `Channel` instead of `L[3]` for the parameter `InChannels` of `__call__`.
+
+```
+class ConvLayer(Module, Generic[InChannels, OutChannels, KernelSize, Stride]):
+    def __call__(
+            self,
+            x: Tensor[DType, Batch, InChannels, Height, Width]
+    ) -> Tensor[
+        DType,
+        Batch,
+        OutChannels,
+        Add[Divide[Add[Add[Height, Multiply[KernelSize, L[-1]]], Multiply[Divide[KernelSize, L[2]], L[2]]], Stride], L[1]],
+        Add[Divide[Add[Add[Width, Multiply[KernelSize, L[-1]]], Multiply[Divide[KernelSize, L[2]], L[2]]], Stride], L[1]],
+    ]: ...
+
+conv1: ConvLayer[Channels, Channels, L[3], L[1]] = ConvLayer(channels, channels, kernel_size=3, stride=1)
+
+x: Tensor[int, L[2], L[10], L[3], L[5]]
+conv1(x)
+
+fast_neural_style/neural_style/transformer_net.py:132:19 Incompatible parameter type [6]: Expected `Tensor[Variable[DType], Variable[Batch (bound to int)], Variable[Channels (bound to int)], Variable[Height (bound to int)], Variable[Width (bound to int)]]` for 1st positional only parameter to call `ConvLayer.__call__` but got `Tensor[int, int, int, int, int]`.
+```
+
++ Truly baffling: Didn't realize that I was using `2` instead of `L[2]`.
+
+```
+y: Divide[L[3], L[2]]
+
+fast_neural_style/neural_style/transformer_net.py:103:11 Invalid type [31]: Expression `pyre_extensions.Divide[(typing_extensions.Literal[4], 2)]` is not a valid type.
+fast_neural_style/neural_style/transformer_net.py:103:11 Invalid type parameters [24]: Type parameter `unknown` violates constraints on `Variable[pyre_extensions._B (bound to int)]` in generic type `Divide`.
+```
+
++ Don't see `reveal_type` in .pyi files. Confusing.
+
++ Used `TypeVar("Padding")` instead of `TypeVar("Padding", bound=int)`. The revealed type for `Add[Add[Height, Padding], Padding]` was `Any`, without no explanation. Should point out that we used a non-int variable.
+
++ Revealed type for a callable should instantiate known literal types. That way, users can tell what the expected type is. Below, it should have shown an expected parameter type of `Tensor[DType, Batch, Channels, Height, Width]` and a return type of `Tensor[DType, Batch, Channels, ..., ...]`.
+
+```
+class ConvLayer(Module, Generic[InChannels, OutChannels, KernelSize, Stride]):
+    def __call__(
+            self,
+            x: Tensor[DType, Batch, InChannels, Height, Width]
+    ) -> Tensor[
+        DType,
+        Batch,
+        OutChannels,
+        Add[Divide[Add[Add[Height, Multiply[KernelSize, L[-1]]], Multiply[Divide[KernelSize, L[2]], L[2]]], Stride], L[1]],
+        Add[Divide[Add[Add[Width, Multiply[KernelSize, L[-1]]], Multiply[Divide[KernelSize, L[2]], L[2]]], Stride], L[1]],
+    ]: ...
+
+conv1: ConvLayer[Channels, Channels, L[3], L[1]] = ConvLayer(channels, channels, kernel_size=3, stride=1)
+
+fast_neural_style/neural_style/transformer_net.py:133:8 Revealed type [-1]: Revealed type for `self.conv1` is `ConvLayer[Variable[Channels (bound to int)], Variable[Channels (bound to int)], typing_extensions.Literal[3], typing_extensions.Literal[1]]`.
+
+fast_neural_style/neural_style/transformer_net.py:133:8 Revealed type [-1]: Revealed type for `self.conv1.__call__` is `BoundMethod[typing.Callable(ConvLayer.__call__)[[Named(self, ConvLayer[Variable[Channels (bound to int)], Variable[Channels (bound to int)], typing_extensions.Literal[3], typing_extensions.Literal[1]]), Named(x, Tensor[Variable[DType], Variable[Batch (bound to int)], Variable[Channels (bound to int)], Variable[Height (bound to int)], Variable[Width (bound to int)]])], Tensor[Variable[DType], Variable[Batch (bound to int)], Variable[Channels (bound to int)], Variable[Height (bound to int)], Variable[Width (bound to int)]]], ConvLayer[Variable[Channels (bound to int)], Variable[Channels (bound to int)], typing_extensions.Literal[3], typing_extensions.Literal[1]]]`.
+```
+
++ Should instantiate literal types:
+
+```
+fast_neural_style/neural_style/transformer_net.py:148:20 Unsupported operand [58]: `+` is not supported for operand types `Tensor[Variable[DType], Variable[Batch (bound to int)], Variable[Channels (bound to int)], Variable[Height (bound to int)], Variable[Width (bound to int)]]` and `Tensor[Variable[DType], Variable[Batch (bound to int)], Variable[Channels (bound to int)], Variable[Height (bound to int)], Variable[Width (bound to int)]]`.
+```

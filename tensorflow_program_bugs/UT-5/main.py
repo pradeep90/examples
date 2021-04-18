@@ -56,7 +56,7 @@ def train():
     """Step 0: load image data and training parameters"""
     # parameter_file = sys.argv[1]
     # params = json.loads(open(parameter_file).read())
-    params = json.loads(open('ut_5_parameters.json').read())
+    params = json.loads(open('parameters.json').read())
 
     train_dataset = get_dataset(tfds.Split.TRAIN)
     train_dataset = train_dataset.batch(params['batch_size'])

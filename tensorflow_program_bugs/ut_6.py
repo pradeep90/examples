@@ -8,13 +8,13 @@ vocab_size = 100
 embedding_size = 128
 o1 = 64
 o2 = 32
-weights = {"out": tf.random.uniform([o2, 1]), "h1": tf.random.uniform([embedding_size, o1]),
-           "h2": tf.random.uniform([o1, o2])}
-biases = {"out": tf.random.uniform([1]), "b1": tf.random.uniform([o1]),
-          "b2": tf.random.uniform([o2])}
+weights = {"out": tf.random.uniform((o2, 1)), "h1": tf.random.uniform((embedding_size, o1)),
+           "h2": tf.random.uniform((o1, o2))}
+biases = {"out": tf.random.uniform((1,)), "b1": tf.random.uniform((o1,)),
+          "b2": tf.random.uniform((o2,))}
 
 with tf.device('/cpu:0'), tf.name_scope("embedding"):
-    W = tf.Variable(tf.random.uniform([vocab_size, embedding_size], -1.0, 1.0), name="W")
+    W = tf.Variable(tf.random.uniform((vocab_size, embedding_size), -1.0, 1.0), name="W")
 
 
 def multilayer_perceptron(_X, _weights, _biases):
@@ -31,5 +31,5 @@ def compute_cost(x, y):
     return cost
 
 
-print(compute_cost(x=np.random.randint(0, 10, [2, n_input]),
+print(compute_cost(x=np.random.randint(0, 10, (2, n_input)),
                    y=[[1, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 1, 0, 0, 0, 0, 0, 0, 0, 0]]))

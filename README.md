@@ -200,6 +200,33 @@ The problem here is caused by a comparison to `argmax(Y)` instead of `Y` (a scal
 
 I don't think we can catch this with static shape analysis. It doesn't produce a runtime error; it's valid code, but it just does the wrong thing. I think this code has been copy-pasted from a different example without the programmer really understanding what was going on.
 
+# Tips for Future Stub Authors
+
++ Consider writing a "unit test" function for complicated type signatures.
+
+If we are doing non-trivial arithmetic in a type signature, it helps to have tests that can tell us that we did it right and can catch regressions later on.
+
+For example:
+
+```
+class ConvLayer(Module, Generic[InChannels, OutChannels, KernelSize, Stride]):
+    def __call__(
+            self,
+            x: Tensor[DType, Batch, InChannels, Height, Width]
+    ) -> Tensor[
+        DType,
+        Batch,
+        OutChannels,
+        Add[Divide[Add[Add[Height, Multiply[KernelSize, L[-1]]], Multiply[Divide[KernelSize, L[2]], L[2]]], Stride], L[1]],
+        Add[Divide[Add[Add[Width, Multiply[KernelSize, L[-1]]], Multiply[Divide[KernelSize, L[2]], L[2]]], Stride], L[1]],
+    ]: ...
+
+def test_conv_layer_type() -> None:
+    conv: ConvLayer[L[10], L[20], L[3], L[1]]
+    x: Tensor[int, L[2], L[10], L[3], L[5]]
+	y: Tensor[int, L[2], L[20], L[3], L[5]] = conv(x)
+```
+
 # Need for Better Error Messages
 
 They are pretty arcane now.

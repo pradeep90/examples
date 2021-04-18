@@ -265,6 +265,8 @@ fast_neural_style/neural_style/transformer_net.py:103:11 Invalid type parameters
 
 + Don't see `reveal_type` in .pyi files. Confusing.
 
++ `Divide[KernelSize, 2]` shows up as `IntExpression`, which may seem like it's not something that can be assigned to a `TypeVar` with `bound=int`. We should clarify that it is indeed assignable.
+
 + Used `TypeVar("Padding")` instead of `TypeVar("Padding", bound=int)`. The revealed type for `Add[Add[Height, Padding], Padding]` was `Any`, without no explanation. Should point out that we used a non-int variable.
 
 + Revealed type for a callable should instantiate known literal types. That way, users can tell what the expected type is. Below, it should have shown an expected parameter type of `Tensor[DType, Batch, Channels, Height, Width]` and a return type of `Tensor[DType, Batch, Channels, ..., ...]`.

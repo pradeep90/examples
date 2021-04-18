@@ -4,6 +4,12 @@ Adapted to TensorFlow 2 from
 https://github.com/ForeverZyh/TensorFlow-Program-Bugs/blob/master/StackOverflow/UT-15/38447935-buggy/fitting.py
 which, in, is originally from
 https://stackoverflow.com/questions/38447935/tensorflow-model-always-produces-mean
+
+The bug here occurs because `y_` has shape (3,), while `y` has shape (3, 1).
+In `compute_error`, therefore, `y_ - y` ends up being broadcast to (3, 3),
+which produces completely the wrong gradients.
+
+I'm not sure we can detect this automatically with shape-typing.
 """
 
 import tensorflow as tf

@@ -186,3 +186,5 @@ def constant(value: List, dtype: Optional[Any] = ...) -> Tensor: ...
 GradientTape = Any
 reduce_mean = Any
 function: Any
+device: Any
+name_scope: Any

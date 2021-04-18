@@ -1,6 +1,3 @@
-# UT-3 from
-# https://github.com/ForeverZyh/TensorFlow-Program-Bugs/blob/master/StackOverflow/UT-3/35451948-buggy/image_set_shape.py
-
 import tensorflow as tf
 import numpy as np
 from typing_extensions import Literal as L

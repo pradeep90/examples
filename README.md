@@ -69,6 +69,27 @@ debug data:
     132 Have Fallbacks to Any: ()}
 ```
 
++ Plain `Tensor` is not handled gracefully:
+
+```
+def foo(x: Tensor) -> Tensor: ...
+
+def bar(x: Tensor[int, L[10], L[20]]) -> None: ...
+
+def baz(x: Tensor, y: Tensor[int, L[10], L[20]]) -> None:
+    foo(x)
+    foo(y)
+
+	# Error here.
+    bar(x)
+    bar(y)
+
+$ pyre
+Incompatible parameter type [6]: Expected `Tensor[int, typing_extensions.Literal[10], typing_extensions.Literal[20]]` for 1st positional only parameter to call `bar` but got `Tensor[typing.Any, *Tuple[typing.Any, ...]]`.
+```
+
+This basically needs `Tuple[Any, ...]` to be compatible with `Tuple[L[10], L[20]]`. Will have to add that.
+
 ## Gotchas
 
 + We need to annotate empty list assignments: `x = []`. Otherwise, Pyre is unable to guess the eventual type. (We hope to change that in the future, but this is going to be a limitation for a while.)

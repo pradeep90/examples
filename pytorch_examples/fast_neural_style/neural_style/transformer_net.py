@@ -130,9 +130,7 @@ class ResidualBlock(Module, Generic[Channels]):
         residual = x
         out = self.relu(self.in1(self.conv1(x)))
         out = self.in2(self.conv2(out))
-        # pyre-ignore[58]: Bug in Pyre where N + 1 - 1 is not treated as compatible with N.
         out = out + residual
-        # pyre-ignore[7]: Bug in Pyre where N + 1 - 1 is not treated as compatible with N.
         return out
 
 

@@ -1,9 +1,9 @@
-from typing import Any, Generic, Iterator, Tuple, TypeVar, overload
+from typing import Any, Generic, Iterable, Iterator, Tuple, TypeVar, overload, Optional
 
 import torch
 
 # pyre-ignore[21]: Could not find module `pyre_extensions`. (Spurious error)
-from pyre_extensions import TypeVarTuple, Unpack, Add, Multiply, Divide
+from pyre_extensions import TypeVarTuple, Unpack, Add, Subtract, Multiply, Divide
 from torch import Tensor
 from typing_extensions import Literal as L
 
@@ -183,8 +183,6 @@ class LayerNorm(Module):
     def forward(self, x: Tensor[DType, Unpack[Ts]]) -> Tensor[DType, Unpack[Ts]]: ...
     def __call__(self, x: Tensor[DType, Unpack[Ts]]) -> Tensor[DType, Unpack[Ts]]: ...
 
-def foo(x: Tuple[N, L[None]]) -> AdaptiveAvgPool2d[N, L[-1]]: ...
-
 class AdaptiveAvgPool2d(Module, Generic[H, W]):
     @overload
     def __new__(
@@ -219,3 +217,7 @@ class AdaptiveAvgPool2d(Module, Generic[H, W]):
     def __call__(
         self: AdaptiveAvgPool2d[H, W], x: Tensor[DType, Unpack[Ts], int, int]
     ) -> Tensor[DType, Unpack[Ts], H, W]: ...
+
+class ModuleList(Module):
+    def __init__(self, modules: Optional[Iterable[Module]] = ...) -> None: ...
+    def __iter__(self) -> Iterator[Module]: ...

@@ -66,15 +66,13 @@ class int32: ...
 class bool: ...
 class memory_format: ...
 
-class device:
-    def __init__(self, name: str) -> None: ...
-
+float = float32
 double = float64
 
 class long: ...
 class layout: ...
 
-class device(object):
+class device:
     def __init__(self, device_str: str): ...
 
 class memory_format: ...
@@ -82,6 +80,8 @@ class memory_format: ...
 class Tensor(Generic[DType, Unpack[Ts]]):
     @property
     def device(self) -> device: ...
+    @property
+    def dtype(self) -> Type[DType]: ...
     def long(self) -> "LongTensor[DType, Unpack[Ts]]": ...
     # BEWARE: The type for self must not reuse `Ts`. This is because the type
     # of the object is `Tensor[DType, Unpack[Ts]]`.
@@ -94,6 +94,12 @@ class Tensor(Generic[DType, Unpack[Ts]]):
     def size(self: Tensor[DType, N1, Unpack[Rs]], axis: L[0]) -> N1: ...
     @overload
     def size(self: Tensor[DType, N1, N2, Unpack[Rs]], axis: L[1]) -> N2: ...
+    @overload
+    def size(self: Tensor[DType, Unpack[Rs], N1], axis: L[-1]) -> N1: ...
+    @overload
+    def size(self: Tensor[DType, Unpack[Rs], N1, N2], axis: L[-2]) -> N1: ...
+    @overload
+    def size(self: Tensor[DType, Unpack[Rs]]) -> Tuple[Unpack[Rs]]: ...
     @overload
     def split(
         self: Tensor[DType, N1, Unpack[Rs]], split_size_or_sections: N, dim: L[0] = ...
@@ -148,6 +154,15 @@ class Tensor(Generic[DType, Unpack[Ts]]):
         other: builtin_float,
     ) -> Tensor[float32, Unpack[Rs]]: ...
     @overload
+    def __iadd__(
+        self, other: Tensor[DType, Unpack[Rs]]
+    ) -> Tensor[DType, Unpack[Broadcast[Tuple[Unpack[Ts]], Tuple[Unpack[Rs]]]]]: ...
+    @overload
+    def __iadd__(
+        self,
+        other: builtin_float,
+    ) -> Tensor[float32, Unpack[Ts]]: ...
+    @overload
     def __radd__(
         self: Tensor[DType, Unpack[Rs]], other: Tensor[DType, Unpack[Rs2]]
     ) -> Tensor[DType, Unpack[Broadcast[Tuple[Unpack[Rs]], Tuple[Unpack[Rs2]]]]]: ...
@@ -163,6 +178,15 @@ class Tensor(Generic[DType, Unpack[Ts]]):
     @overload
     def __sub__(
         self: Tensor[DType, Unpack[Rs]],
+        other: builtin_float,
+    ) -> Tensor[float32, Unpack[Rs]]: ...
+    @overload
+    def __isub__(
+        self, other: Tensor[DType, Unpack[Rs]]
+    ) -> Tensor[DType, Unpack[Broadcast[Tuple[Unpack[Ts]], Tuple[Unpack[Rs]]]]]: ...
+    @overload
+    def __isub__(
+        self,
         other: builtin_float,
     ) -> Tensor[float32, Unpack[Rs]]: ...
     @overload
@@ -181,6 +205,16 @@ class Tensor(Generic[DType, Unpack[Ts]]):
     ) -> Tensor[DType, Unpack[Broadcast[Tuple[Unpack[Rs]], Tuple[Unpack[Rs2]]]]]: ...
     @overload
     def __mul__(
+        self,
+        other: builtin_float,
+    ) -> Tensor[float32, Unpack[Ts]]: ...
+    @overload
+    def __imul__(
+        self,
+        other: Tensor[DType, Unpack[Rs]],
+    ) -> Tensor[DType, Unpack[Broadcast[Tuple[Unpack[Ts]], Tuple[Unpack[Rs]]]]]: ...
+    @overload
+    def __imul__(
         self,
         other: builtin_float,
     ) -> Tensor[float32, Unpack[Ts]]: ...
@@ -196,12 +230,27 @@ class Tensor(Generic[DType, Unpack[Ts]]):
     ) -> Tensor[float32, Unpack[Ts]]: ...
     @overload
     def __truediv__(
-        self: Tensor[int64, Unpack[Rs]],
+        self,
         other: builtin_float,
     ) -> Tensor[float32, Unpack[Ts]]: ...
     @overload
+    def __truediv__(
+        self,
+        other: Tensor[DType, Unpack[Rs]],
+    ) -> Tensor[float32, Unpack[Broadcast[Tuple[Unpack[Ts]], Tuple[Unpack[Rs]]]]]: ...
+    @overload
+    def __itruediv__(
+        self,
+        other: builtin_float,
+    ) -> Tensor[DType, Unpack[Ts]]: ...
+    @overload
+    def __itruediv__(
+        self,
+        other: Tensor[DType, Unpack[Rs]],
+    ) -> Tensor[DType, Unpack[Broadcast[Tuple[Unpack[Ts]], Tuple[Unpack[Rs]]]]]: ...
+    @overload
     def __rtruediv__(
-        self: Tensor[int64, Unpack[Rs]],
+        self,
         other: builtin_float,
     ) -> Tensor[float32, Unpack[Ts]]: ...
     @overload
@@ -209,6 +258,21 @@ class Tensor(Generic[DType, Unpack[Ts]]):
         self,
         other: int,
     ) -> Tensor[DType, Unpack[Ts]]: ...
+    @overload
+    def __floordiv__(
+        self,
+        other: Tensor[DType, Unpack[Rs]],
+    ) -> Tensor[DType, Unpack[Broadcast[Tuple[Unpack[Ts]], Tuple[Unpack[Rs]]]]]: ...
+    @overload
+    def __ifloordiv__(
+        self,
+        other: int,
+    ) -> Tensor[DType, Unpack[Ts]]: ...
+    @overload
+    def __ifloordiv__(
+        self,
+        other: Tensor[DType, Unpack[Rs]],
+    ) -> Tensor[DType, Unpack[Broadcast[Tuple[Unpack[Ts]], Tuple[Unpack[Rs]]]]]: ...
     @overload
     def __rfloordiv__(
         self,
@@ -253,18 +317,234 @@ class Tensor(Generic[DType, Unpack[Ts]]):
         self: Tensor[DType, N1, N2, Unpack[Ts]],
         dim: L[1],
     ) -> Tensor[bool, N1, Unpack[Ts]]: ...
+    @overload
+    def argmin(
+        self: Tensor[DType, N1, Unpack[Rs]],
+        dim: L[0],
+        keepdim: L[True],
+    ) -> Tensor[int64, L[1], Unpack[Rs]]: ...
+    @overload
+    def argmin(
+        self: Tensor[DType, N1, Unpack[Rs]],
+        dim: L[0],
+        keepdim: L[False] = ...,
+    ) -> Tensor[int64, Unpack[Rs]]: ...
+    @overload
+    def argmin(
+        self: Tensor[DType, N1, N2, Unpack[Rs]],
+        dim: L[1],
+        keepdim: L[True],
+    ) -> Tensor[int64, N1, L[1], Unpack[Rs]]: ...
+    @overload
+    def argmin(
+        self: Tensor[DType, N1, N2, Unpack[Rs]],
+        dim: L[1],
+        keepdim: L[False] = ...,
+    ) -> Tensor[int64, N1, Unpack[Rs]]: ...
+    @overload
+    def argmin(
+        self: Tensor[DType, N1, N2, N3, Unpack[Rs]],
+        dim: L[2],
+        keepdim: L[True],
+    ) -> Tensor[int64, N1, N2, L[1], Unpack[Rs]]: ...
+    @overload
+    def argmin(
+        self: Tensor[DType, N1, N2, N3, Unpack[Rs]],
+        dim: L[2],
+        keepdim: L[False] = ...,
+    ) -> Tensor[int64, N1, N2, Unpack[Rs]]: ...
+    @overload
+    def argmin(
+        self: Tensor[DType, Unpack[Rs], N1],
+        dim: L[-1],
+        keepdim: L[True],
+    ) -> Tensor[int64, Unpack[Rs], L[1]]: ...
+    @overload
+    def argmin(
+        self: Tensor[DType, Unpack[Rs], N1],
+        dim: L[-1],
+        keepdim: L[False] = ...,
+    ) -> Tensor[int64, Unpack[Rs]]: ...
+    @overload
+    def argmin(
+        self: Tensor[DType, Unpack[Rs]],
+        dim: L[None] = ...,
+        keepdim: builtins.bool = ...,
+    ) -> Tensor[int64]: ...
+    def clone(
+        input, *, memory_format: Optional[memory_format] = ...
+    ) -> Tensor[DType, Unpack[Ts]]: ...
+    @overload
+    def count_nonzero(
+        self: Tensor[DType, N1, Unpack[Rs]],
+        dim: L[0],
+    ) -> Tensor[int64, Unpack[Rs]]: ...
+    @overload
+    def count_nonzero(
+        self: Tensor[DType, N1, N2, Unpack[Rs]],
+        dim: L[1],
+    ) -> Tensor[int64, N1, Unpack[Rs]]: ...
+    @overload
+    def count_nonzero(
+        self: Tensor[DType, N1, N2, N3, Unpack[Rs]],
+        dim: L[2],
+    ) -> Tensor[int64, N1, N2, Unpack[Rs]]: ...
+    @overload
+    def count_nonzero(
+        self: Tensor[DType, Unpack[Rs], N1],
+        dim: L[-1],
+    ) -> Tensor[int64, Unpack[Rs]]: ...
+    @overload
+    def count_nonzero(
+        self: Tensor[DType, Unpack[Rs]],
+        dim: L[None] = ...,
+        keepdim: builtins.bool = ...,
+    ) -> Tensor[int64]: ...
+    def indices(self) -> Tensor: ...
+    @overload
+    def max(
+        self: Tensor[DType, N1, Unpack[Rs]],
+        dim: L[0],
+        keepdim: L[True],
+    ) -> Tensor[DType, L[1], Unpack[Rs]]: ...
+    @overload
+    def max(
+        self: Tensor[DType, N1, Unpack[Rs]],
+        dim: L[0],
+        keepdim: L[False] = ...,
+    ) -> Tensor[DType, Unpack[Rs]]: ...
+    @overload
+    def max(
+        self: Tensor[DType, N1, N2, Unpack[Rs]],
+        dim: L[1],
+        keepdim: L[True],
+    ) -> Tensor[DType, N1, L[1], Unpack[Rs]]: ...
+    @overload
+    def max(
+        self: Tensor[DType, N1, N2, Unpack[Rs]],
+        dim: L[1],
+        keepdim: L[False] = ...,
+    ) -> Tensor[DType, N1, Unpack[Rs]]: ...
+    @overload
+    def max(
+        self: Tensor[DType, N1, N2, N3, Unpack[Rs]],
+        dim: L[2],
+        keepdim: L[True],
+    ) -> Tensor[DType, N1, N2, L[1], Unpack[Rs]]: ...
+    @overload
+    def max(
+        self: Tensor[DType, N1, N2, N3, Unpack[Rs]],
+        dim: L[2],
+        keepdim: L[False] = ...,
+    ) -> Tensor[DType, N1, N2, Unpack[Rs]]: ...
+    @overload
+    def max(
+        self: Tensor[DType, Unpack[Rs], N1],
+        dim: L[-1],
+        keepdim: L[True],
+    ) -> Tensor[DType, Unpack[Rs], L[1]]: ...
+    @overload
+    def max(
+        self: Tensor[DType, Unpack[Rs], N1],
+        dim: L[-1],
+        keepdim: L[False] = ...,
+    ) -> Tensor[DType, Unpack[Rs]]: ...
+    @overload
+    def max(
+        self: Tensor[DType, Unpack[Rs], N1, N2],
+        dim: L[-2],
+        keepdim: L[True],
+    ) -> Tensor[DType, Unpack[Rs], L[1], N2]: ...
+    @overload
+    def max(
+        self: Tensor[DType, Unpack[Rs], N1, N2],
+        dim: L[-2],
+        keepdim: L[False] = ...,
+    ) -> Tensor[DType, Unpack[Rs], N2]: ...
+    @overload
+    def max(
+        self: Tensor[DType, Unpack[Rs]],
+    ) -> Tensor[DType]: ...
+    @overload
+    def mean(
+        self: Tensor[DType, N1, Unpack[Rs]],
+        dim: L[0],
+        keepdim: L[True],
+    ) -> Tensor[DType, L[1], Unpack[Rs]]: ...
+    @overload
+    def mean(
+        self: Tensor[DType, N1, Unpack[Rs]],
+        dim: L[0],
+        keepdim: L[False] = ...,
+    ) -> Tensor[DType, Unpack[Rs]]: ...
+    @overload
+    def mean(
+        self: Tensor[DType, N1, N2, Unpack[Rs]],
+        dim: L[1],
+        keepdim: L[True],
+    ) -> Tensor[DType, N1, L[1], Unpack[Rs]]: ...
+    @overload
+    def mean(
+        self: Tensor[DType, N1, N2, Unpack[Rs]],
+        dim: L[1],
+        keepdim: L[False] = ...,
+    ) -> Tensor[DType, N1, Unpack[Rs]]: ...
+    @overload
+    def mean(
+        self: Tensor[DType, N1, N2, N3, Unpack[Rs]],
+        dim: L[2],
+        keepdim: L[True],
+    ) -> Tensor[DType, N1, N2, L[1], Unpack[Rs]]: ...
+    @overload
+    def mean(
+        self: Tensor[DType, N1, N2, N3, Unpack[Rs]],
+        dim: L[2],
+        keepdim: L[False] = ...,
+    ) -> Tensor[DType, N1, N2, Unpack[Rs]]: ...
+    @overload
+    def mean(
+        self: Tensor[DType, Unpack[Rs], N1],
+        dim: L[-1],
+        keepdim: L[True],
+    ) -> Tensor[DType, Unpack[Rs], L[1]]: ...
+    @overload
+    def mean(
+        self: Tensor[DType, Unpack[Rs], N1],
+        dim: L[-1],
+        keepdim: L[False] = ...,
+    ) -> Tensor[DType, Unpack[Rs]]: ...
+    @overload
+    def mean(
+        self: Tensor[DType, Unpack[Rs]],
+        dim: L[None] = ...,
+        keepdim: builtins.bool = ...,
+    ) -> Tensor[DType]: ...
     def bitwise_not(self) -> Tensor[DType, Unpack[Ts]]: ...
     def bitwise_not_(self) -> Tensor[DType, Unpack[Ts]]: ...
+    @overload
+    def diff(
+        self: Tensor[DType, Unpack[Rs], Add[N1, L[1]], N2],
+        dim: L[-2],
+    ) -> Tensor[DType, Unpack[Rs], N1, N2]: ...
+    @overload
+    def diff(
+        self: Tensor[DType, Add[N, L[1]], Unpack[Rs]],
+        dim: L[0],
+    ) -> Tensor[DType, N, Unpack[Rs]]: ...
+    @overload
+    def diff(
+        self: Tensor[DType, N1, Add[N2, L[1]], Unpack[Rs]],
+        dim: L[1],
+    ) -> Tensor[DType, N1, N2, Unpack[Rs]]: ...
+    @overload
+    def diff(
+        self: Tensor[DType, Unpack[Rs], Add[N, L[1]]],
+        dim: L[-1] = ...,
+    ) -> Tensor[DType, Unpack[Rs], N]: ...
     def is_sparse(self) -> builtins.bool: ...
     def coalesce(self: Tensor[DType, Unpack[Rs]]) -> Tensor[DType, Unpack[Rs]]: ...
     def values(self: Tensor[DType, Unpack[Rs]]) -> Tensor[DType, Unpack[Rs]]: ...
     def to_sparse(self: Tensor[DType, Unpack[Ts]]) -> Tensor[DType, Unpack[Ts]]: ...
-    @overload
-    def argmin(
-        self: Tensor[DType, N1, N2, Unpack[Rs]],
-        dim: L[1] = ...,
-        keepdim: builtins.bool = ...,
-    ) -> LongTensor[int64, N1, Unpack[Rs]]: ...
     def float(self: Tensor[DType, Unpack[Rs]]) -> Tensor[float32, Unpack[Rs]]: ...
     @overload
     def item(self: Tensor[DType, L[1]]) -> DType: ...
@@ -334,7 +614,35 @@ class Tensor(Generic[DType, Unpack[Ts]]):
     def repeat(
         self: Tensor[DType, N1, N2, N3], size1: N4, size2: N5, size3: N6
     ) -> Tensor[DType, Multiply[N1, N4], Multiply[N2, N5], Multiply[N3, N6]]: ...
+    @overload
+    def repeat_interleave(
+        self: Tensor[DType, Unpack[Rs], N1], repeats: N, dim: L[-1]
+    ) -> Tensor[DType, Unpack[Rs], Multiply[N1, N]]: ...
+    @overload
+    def repeat_interleave(
+        self: Tensor[DType, N1, Unpack[Rs]], repeats: N, dim: L[0]
+    ) -> Tensor[DType, Multiply[N1, N], Unpack[Rs]]: ...
+    @overload
+    def repeat_interleave(
+        self: Tensor[DType, N1, N2, Unpack[Rs]], repeats: N, dim: L[1]
+    ) -> Tensor[DType, N1, Multiply[N2, N], Unpack[Rs]]: ...
+    @overload
+    def repeat_interleave(
+        self: Tensor[DType, Unpack[Rs]], repeats: N, dim: L[None] = ...
+    ) -> Tensor[DType, Product[N, Unpack[Rs]]]: ...
+    # The output shape here depends on the contents of `repeats`, so give up.
+    @overload
+    def repeat_interleave(
+        input: Tensor[DType, Unpack[Rs]], repeats: Tensor, dim: int = ...
+    ) -> Tensor[DType, Unpack[Tuple[Any, ...]]]: ...
     def __setitem__(self, item: object, other: object) -> None: ...
+    @overload
+    def softmax(self, dim: int) -> Tensor[DType, Unpack[Ts]]: ...
+    @overload
+    def softmax(self, dim: int, dtype: Type[DType2]) -> Tensor[DType2, Unpack[Ts]]: ...
+    def type_as(
+        self, other: Tensor[DType2, Unpack[Rs]]
+    ) -> Tensor[DType2, Unpack[Rs]]: ...
     @overload
     def view(
         self: Tensor[DType, Unpack[Rs]], *shape: Unpack[Tuple[L[-1], Unpack[Rs2]]]
@@ -346,6 +654,12 @@ class Tensor(Generic[DType, Unpack[Ts]]):
         self: Tensor[DType, Unpack[Rs]], *shape: Unpack[Tuple[N1, L[-1], Unpack[Rs2]]]
     ) -> Tensor[
         DType, N1, Divide[Product[Unpack[Rs]], Product[N1, Unpack[Rs2]]], Unpack[Rs2]
+    ]: ...
+    @overload
+    def view(
+        self: Tensor[DType, Unpack[Rs]], *shape: Unpack[Tuple[Unpack[Rs2], L[-1]]]
+    ) -> Tensor[
+        DType, Unpack[Rs2], Divide[Product[Unpack[Rs]], Product[Unpack[Rs2]]]
     ]: ...
     @overload
     def view(self, *shape: Unpack[Rs]) -> Tensor[DType, Unpack[Rs]]: ...
@@ -405,7 +719,7 @@ class Tensor(Generic[DType, Unpack[Ts]]):
     ) -> Tensor[bool, Unpack[Rs]]: ...
     @overload
     def __gt__(
-        self: Tensor[float32, Unpack[Rs]], x: float
+        self: Tensor[float32, Unpack[Rs]], x: builtin_float
     ) -> Tensor[bool, Unpack[Rs]]: ...
     def logical_and(
         self,
@@ -435,8 +749,17 @@ class Tensor(Generic[DType, Unpack[Ts]]):
     def reshape(self, *shape: Unpack[Rs]) -> Tensor[DType, Unpack[Rs]]: ...
     @overload
     def unbind(
-        self: Tensor[DType, N, N1, Unpack[Rs]], dim: L[1] = ...
-    ) -> Sequence[Tensor[DType, N, Unpack[Rs]]]: ...
+        self: Tensor[DType, Unpack[Rs], N], dim: L[-1]
+    ) -> Tuple[Tensor[DType, Unpack[Rs]], ...]: ...
+    @overload
+    def unbind(
+        self: Tensor[DType, N, N1, Unpack[Rs]], dim: L[1]
+    ) -> Tuple[Tensor[DType, N, Unpack[Rs]], ...]: ...
+    @overload
+    def unbind(
+        self: Tensor[DType, N, Unpack[Rs]], dim: L[0] = ...
+    ) -> Tuple[Tensor[DType, Unpack[Rs]], ...]: ...
+    def sign(self, *, out: Optional[Tensor] = ...) -> Tensor[DType, Unpack[Ts]]: ...
     @overload
     def sum(
         self: Tensor[DType, N1, Unpack[Rs]], dim: L[0], *, dtype: Optional[device] = ...
@@ -489,16 +812,23 @@ class LongTensor(Tensor[DType, Unpack[Ts]], Generic[DType, Unpack[Ts]]):
         other: LongTensor[DType, Unpack[Rs]],
     ) -> LongTensor[bool, Unpack[Rs]]: ...
 
+# NOTE: These `torch` functions below have a method counterpart in `Tensor`. So,
+# if you update the stubs here, please update the method stub as well.
+
 def allclose(
     input: Tensor,
     other: Tensor,
-    rtol: float = ...,
-    atol: float = ...,
+    rtol: builtin_float = ...,
+    atol: builtin_float = ...,
     equal_nan: builtins.bool = ...,
 ) -> builtins.bool: ...
 def bitwise_not(
     input: Tensor[DType, Unpack[Ts]], *, out: Optional[Tensor] = ...
 ) -> Tensor[DType, Unpack[Ts]]: ...
+def einsum(
+    equation: str,
+    *operands: Tensor,
+) -> Tensor: ...
 @overload
 def eye(
     n: N,
@@ -660,31 +990,231 @@ def arange(
 ) -> Tensor[DType, Divide[Add[N2, Multiply[L[-1], N1]], N]]: ...
 @overload
 def arange(
-    end: float,
-    start: float = ...,
-    step: float = ...,
+    end: builtin_float,
+    start: builtin_float = ...,
+    step: builtin_float = ...,
     out: Optional[int] = ...,
     dtype: Type[DType] = ...,
     layout: Type[Parameter] = ...,
     device: device = ...,
     requires_grad: builtins.bool = ...,
 ) -> Tensor[DType, int]: ...
+@overload
+def argmin(
+    input: Tensor[DType, N1, Unpack[Rs]],
+    dim: L[0],
+    keepdim: L[True],
+) -> Tensor[int64, L[1], Unpack[Rs]]: ...
+@overload
+def argmin(
+    input: Tensor[DType, N1, Unpack[Rs]],
+    dim: L[0],
+    keepdim: L[False] = ...,
+) -> Tensor[int64, Unpack[Rs]]: ...
+@overload
+def argmin(
+    input: Tensor[DType, N1, N2, Unpack[Rs]],
+    dim: L[1],
+    keepdim: L[True],
+) -> Tensor[int64, N1, L[1], Unpack[Rs]]: ...
+@overload
+def argmin(
+    input: Tensor[DType, N1, N2, Unpack[Rs]],
+    dim: L[1],
+    keepdim: L[False] = ...,
+) -> Tensor[int64, N1, Unpack[Rs]]: ...
+@overload
+def argmin(
+    input: Tensor[DType, N1, N2, N3, Unpack[Rs]],
+    dim: L[2],
+    keepdim: L[True],
+) -> Tensor[int64, N1, N2, L[1], Unpack[Rs]]: ...
+@overload
+def argmin(
+    input: Tensor[DType, N1, N2, N3, Unpack[Rs]],
+    dim: L[2],
+    keepdim: L[False] = ...,
+) -> Tensor[int64, N1, N2, Unpack[Rs]]: ...
+@overload
+def argmin(
+    input: Tensor[DType, Unpack[Rs], N1],
+    dim: L[-1],
+    keepdim: L[True],
+) -> Tensor[int64, Unpack[Rs], L[1]]: ...
+@overload
+def argmin(
+    input: Tensor[DType, Unpack[Rs], N1],
+    dim: L[-1],
+    keepdim: L[False] = ...,
+) -> Tensor[int64, Unpack[Rs]]: ...
+@overload
+def argmin(
+    input: Tensor[DType, Unpack[Rs]],
+    dim: L[None] = ...,
+    keepdim: builtins.bool = ...,
+) -> Tensor[int64]: ...
 def bmm(
     input: Tensor[DType, B, N, M], mat2: Tensor[DType, B, M, P]
 ) -> Tensor[DType, B, N, P]: ...
-@overload
+def diag(
+    input: Tensor[DType, Unpack[Tuple[Any, ...]]],
+    diagonal: int = ...,
+    *,
+    out: Optional[Tensor] = ...,
+) -> Tensor[DType, Unpack[Tuple[Any, ...]]]: ...
+def diagonal(
+    input: Tensor[DType, Unpack[Tuple[Any, ...]]],
+    offset: int = ...,
+    dim1: int = ...,
+    dim2: int = ...,
+) -> Tensor[DType, Unpack[Tuple[Any, ...]]]: ...
 def diag_embed(
-    input: Tensor[DType, Unpack[Rs], N]
-) -> Tensor[DType, Unpack[Rs], N, N]: ...
+    input: Tensor[DType, Unpack[Tuple[Any, ...]]],
+    offset: int = ...,
+    dim1: int = ...,
+    dim2: int = ...,
+) -> Tensor[DType, Unpack[Tuple[Any, ...]]]: ...
 def logical_and(
     input: Tensor[DType, Unpack[Ts]],
     other: Tensor[DType2, Unpack[Rs]],
     *,
     out: Optional[Tensor] = ...,
 ) -> Tensor[bool, Unpack[Broadcast[Tuple[Unpack[Ts]], Tuple[Unpack[Rs]]]]]: ...
+@overload
+def max(
+    input: Tensor[DType, N1, Unpack[Rs]],
+    dim: L[0],
+    keepdim: L[True],
+) -> Tensor[DType, L[1], Unpack[Rs]]: ...
+@overload
+def max(
+    input: Tensor[DType, N1, Unpack[Rs]],
+    dim: L[0],
+    keepdim: L[False] = ...,
+) -> Tensor[DType, Unpack[Rs]]: ...
+@overload
+def max(
+    input: Tensor[DType, N1, N2, Unpack[Rs]],
+    dim: L[1],
+    keepdim: L[True],
+) -> Tensor[DType, N1, L[1], Unpack[Rs]]: ...
+@overload
+def max(
+    input: Tensor[DType, N1, N2, Unpack[Rs]],
+    dim: L[1],
+    keepdim: L[False] = ...,
+) -> Tensor[DType, N1, Unpack[Rs]]: ...
+@overload
+def max(
+    input: Tensor[DType, N1, N2, N3, Unpack[Rs]],
+    dim: L[2],
+    keepdim: L[True],
+) -> Tensor[DType, N1, N2, L[1], Unpack[Rs]]: ...
+@overload
+def max(
+    input: Tensor[DType, N1, N2, N3, Unpack[Rs]],
+    dim: L[2],
+    keepdim: L[False] = ...,
+) -> Tensor[DType, N1, N2, Unpack[Rs]]: ...
+@overload
+def max(
+    input: Tensor[DType, Unpack[Rs], N1],
+    dim: L[-1],
+    keepdim: L[True],
+) -> Tensor[DType, Unpack[Rs], L[1]]: ...
+@overload
+def max(
+    input: Tensor[DType, Unpack[Rs], N1],
+    dim: L[-1],
+    keepdim: L[False] = ...,
+) -> Tensor[DType, Unpack[Rs]]: ...
+@overload
+def max(
+    input: Tensor[DType, Unpack[Rs], N1, N2],
+    dim: L[-2],
+    keepdim: L[True],
+) -> Tensor[DType, Unpack[Rs], L[1], N2]: ...
+@overload
+def max(
+    input: Tensor[DType, Unpack[Rs], N1, N2],
+    dim: L[-2],
+    keepdim: L[False] = ...,
+) -> Tensor[DType, Unpack[Rs], N2]: ...
+@overload
+def max(
+    input: Tensor[DType, Unpack[Rs]],
+) -> Tensor[DType]: ...
+@overload
+def mean(
+    input: Tensor[DType, N1, Unpack[Rs]],
+    dim: L[0],
+    keepdim: L[True],
+) -> Tensor[DType, L[1], Unpack[Rs]]: ...
+@overload
+def mean(
+    input: Tensor[DType, N1, Unpack[Rs]],
+    dim: L[0],
+    keepdim: L[False] = ...,
+) -> Tensor[DType, Unpack[Rs]]: ...
+@overload
+def mean(
+    input: Tensor[DType, N1, N2, Unpack[Rs]],
+    dim: L[1],
+    keepdim: L[True],
+) -> Tensor[DType, N1, L[1], Unpack[Rs]]: ...
+@overload
+def mean(
+    input: Tensor[DType, N1, N2, Unpack[Rs]],
+    dim: L[1],
+    keepdim: L[False] = ...,
+) -> Tensor[DType, N1, Unpack[Rs]]: ...
+@overload
+def mean(
+    input: Tensor[DType, N1, N2, N3, Unpack[Rs]],
+    dim: L[2],
+    keepdim: L[True],
+) -> Tensor[DType, N1, N2, L[1], Unpack[Rs]]: ...
+@overload
+def mean(
+    input: Tensor[DType, N1, N2, N3, Unpack[Rs]],
+    dim: L[2],
+    keepdim: L[False] = ...,
+) -> Tensor[DType, N1, N2, Unpack[Rs]]: ...
+@overload
+def mean(
+    input: Tensor[DType, Unpack[Rs], N1],
+    dim: L[-1],
+    keepdim: L[True],
+) -> Tensor[DType, Unpack[Rs], L[1]]: ...
+@overload
+def mean(
+    input: Tensor[DType, Unpack[Rs], N1],
+    dim: L[-1],
+    keepdim: L[False] = ...,
+) -> Tensor[DType, Unpack[Rs]]: ...
+@overload
+def mean(
+    input: Tensor[DType, Unpack[Rs]],
+    dim: L[None] = ...,
+    keepdim: builtins.bool = ...,
+) -> Tensor[DType]: ...
+@overload
+def meshgrid(tensor1: Tensor[DType, N1]) -> Tuple[Tensor[DType, N1]]: ...
+@overload
 def meshgrid(
-    s: List[Tensor[DType, ...]]
-) -> Sequence[Tensor[Unpack[Tuple[Any, ...]]]]: ...
+    tensor1: Tensor[DType, N1],
+    tensor2: Tensor[DType, N2],
+) -> Tuple[Tensor[DType, N1, N2], Tensor[DType, N1, N2]]: ...
+@overload
+def meshgrid(
+    tensor1: Tensor[DType, N1],
+    tensor2: Tensor[DType, N2],
+    tensor3: Tensor[DType, N3],
+) -> Tuple[
+    Tensor[DType, N1, N2, N3], Tensor[DType, N1, N2, N3], Tensor[DType, N1, N2, N3]
+]: ...
+@overload
+def meshgrid(*tensors: Tensor) -> Tuple[Tensor, ...]: ...
 def rand_like(
     input: Tensor[Wild, Unpack[Ts]], dtype: Type[DType]
 ) -> Tensor[DType, Unpack[Ts]]: ...
@@ -692,22 +1222,105 @@ def nonzero(
     input: Tensor[DType, Unpack[Ts]], as_tuple: L[False] = ...
 ) -> LongTensor[DType, int, int]: ...
 @overload
+def repeat_interleave(
+    input: Tensor[DType, Unpack[Rs], N1], repeats: N, dim: L[-1]
+) -> Tensor[DType, Unpack[Rs], Multiply[N1, N]]: ...
+@overload
+def repeat_interleave(
+    input: Tensor[DType, N1, Unpack[Rs]], repeats: N, dim: L[0]
+) -> Tensor[DType, Multiply[N1, N], Unpack[Rs]]: ...
+@overload
+def repeat_interleave(
+    input: Tensor[DType, N1, N2, Unpack[Rs]], repeats: N, dim: L[1]
+) -> Tensor[DType, N1, Multiply[N2, N], Unpack[Rs]]: ...
+@overload
+def repeat_interleave(
+    input: Tensor[DType, Unpack[Rs]], repeats: N, dim: L[None] = ...
+) -> Tensor[DType, Product[N, Unpack[Rs]]]: ...
+
+# The output shape here depends on the contents of `repeats`, so give up.
+@overload
+def repeat_interleave(
+    input: Tensor[DType, Unpack[Rs]], repeats: Tensor, dim: int = ...
+) -> Tensor[DType, Unpack[Tuple[Any, ...]]]: ...
+@overload
 def stack(
     tensors: Tuple[Tensor[DType, N, Unpack[Ts]], Tensor[DType, N, Unpack[Ts]]],
     dim: L[1],
     *,
-    out: Optional[Tensor[DType, N, int, Unpack[Ts]]] = ...,
+    out: Optional[Tensor[DType, L[2], Unpack[Ts]]] = ...,
 ) -> Tensor[DType, N, L[2], Unpack[Ts]]: ...
+@overload
+def stack(
+    tensors: Tuple[Tensor[DType, Unpack[Ts]], Tensor[DType, Unpack[Ts]]],
+    dim: L[0] = ...,
+    *,
+    out: Optional[Tensor[DType, L[2], Unpack[Ts]]] = ...,
+) -> Tensor[DType, L[2], Unpack[Ts]]: ...
+@overload
+def stack(
+    tensors: Tuple[
+        Tensor[DType, N, Unpack[Ts]],
+        Tensor[DType, N, Unpack[Ts]],
+        Tensor[DType, N, Unpack[Ts]],
+    ],
+    dim: L[1],
+    *,
+    out: Optional[Tensor[DType, L[3], Unpack[Ts]]] = ...,
+) -> Tensor[DType, N, L[3], Unpack[Ts]]: ...
+@overload
+def stack(
+    tensors: Tuple[
+        Tensor[DType, Unpack[Ts]],
+        Tensor[DType, Unpack[Ts]],
+        Tensor[DType, Unpack[Ts]],
+    ],
+    dim: L[0] = ...,
+    *,
+    out: Optional[Tensor[DType, L[3], Unpack[Ts]]] = ...,
+) -> Tensor[DType, L[3], Unpack[Ts]]: ...
+@overload
+def stack(
+    tensors: Tuple[Any, ...],
+    dim: N = ...,
+    *,
+    out: Optional[Tensor] = ...,
+) -> Tensor: ...
 def cdist(
     input: Tensor[DType, Unpack[Ts], P, M],
     other: Tensor[DType, Unpack[Rs], R, M],
-    p: float = ...,
+    p: builtin_float = ...,
     compute_mode: str = ...,
 ) -> Tensor[DType, Unpack[Broadcast[Tuple[Unpack[Ts]], Tuple[Unpack[Rs]]]], P, R]: ...
 def clone(
     input: Tensor[DType, Unpack[Ts]], *, memory_format: Optional[memory_format] = ...
 ) -> Tensor[DType, Unpack[Ts]]: ...
-def count_nonzero(input: Tensor[DType, Unpack[Ts]]) -> Tensor[int, L[1]]: ...
+@overload
+def count_nonzero(
+    input: Tensor[DType, N1, Unpack[Rs]],
+    dim: L[0],
+) -> Tensor[int64, Unpack[Rs]]: ...
+@overload
+def count_nonzero(
+    input: Tensor[DType, N1, N2, Unpack[Rs]],
+    dim: L[1],
+) -> Tensor[int64, N1, Unpack[Rs]]: ...
+@overload
+def count_nonzero(
+    input: Tensor[DType, N1, N2, N3, Unpack[Rs]],
+    dim: L[2],
+) -> Tensor[int64, N1, N2, Unpack[Rs]]: ...
+@overload
+def count_nonzero(
+    input: Tensor[DType, Unpack[Rs], N1],
+    dim: L[-1],
+) -> Tensor[int64, Unpack[Rs]]: ...
+@overload
+def count_nonzero(
+    input: Tensor[DType, Unpack[Rs]],
+    dim: L[None] = ...,
+    keepdim: builtins.bool = ...,
+) -> Tensor[int64]: ...
 @overload
 def sum(
     input: Tensor[DType, N1, Unpack[Rs]], dim: L[0], *, dtype: Optional[device] = ...
@@ -769,6 +1382,18 @@ def multinomial(
     generator: Optional[Generator] = ...,
 ) -> Tensor[DType, Unpack[Rs], N2]: ...
 @overload
+def unbind(
+    input: Tensor[DType, Unpack[Rs], N], dim: L[-1]
+) -> Tuple[Tensor[DType, Unpack[Rs]], ...]: ...
+@overload
+def unbind(
+    input: Tensor[DType, N, N1, Unpack[Rs]], dim: L[1]
+) -> Tuple[Tensor[DType, N, Unpack[Rs]], ...]: ...
+@overload
+def unbind(
+    input: Tensor[DType, N, Unpack[Rs]], dim: L[0] = ...
+) -> Tuple[Tensor[DType, Unpack[Rs]], ...]: ...
+@overload
 def unsqueeze(
     input: Tensor[DType, Unpack[Ts]], dim: L[-1]
 ) -> Tensor[DType, Unpack[Ts], L[1]]: ...
@@ -791,9 +1416,14 @@ def real(input: Tensor[complex128, Unpack[Ts]]) -> Tensor[float64, Unpack[Ts]]: 
 def zeros_like(
     input: Tensor[DType, Unpack[Ts]],
 ) -> Tensor[DType, Unpack[Ts]]: ...
+@overload
 def randn(
-    *shape: Unpack[Ts], device: device = ..., requires_grad: builtins.bool = ...
-) -> Tensor[float, Unpack[Ts]]: ...
+    size: Tuple[Unpack[Ts]], device: device = ..., requires_grad: builtins.bool = ...
+) -> Tensor[float32, Unpack[Ts]]: ...
+@overload
+def randn(
+    *size: Unpack[Ts], device: device = ..., requires_grad: builtins.bool = ...
+) -> Tensor[float32, Unpack[Ts]]: ...
 @overload
 def all(
     input: Tensor[DType, Unpack[Ts]],
@@ -853,18 +1483,92 @@ def where(
 def where(condition: Tensor[DType, Unpack[Ts]]) -> Any: ...
 @overload
 def diff(
-    input: Tensor[DType, Unpack[Ts], Add[N, L[1]]]
-) -> Tensor[DType, Unpack[Ts], N]: ...
+    input: Tensor[DType, Unpack[Rs], Add[N1, L[1]], N2],
+    dim: L[-2],
+) -> Tensor[DType, Unpack[Rs], N1, N2]: ...
+@overload
+def diff(
+    input: Tensor[DType, Add[N, L[1]], Unpack[Rs]],
+    dim: L[0],
+) -> Tensor[DType, N, Unpack[Rs]]: ...
+@overload
+def diff(
+    input: Tensor[DType, N1, Add[N2, L[1]], Unpack[Rs]],
+    dim: L[1],
+) -> Tensor[DType, N1, N2, Unpack[Rs]]: ...
+@overload
+def diff(
+    input: Tensor[DType, Unpack[Rs], Add[N, L[1]]],
+    dim: L[-1] = ...,
+) -> Tensor[DType, Unpack[Rs], N]: ...
 def argsort(
     input: Tensor[DType, Unpack[Ts]], dim: int = ..., descending: builtin_bool = ...
 ) -> Tensor[DType, Unpack[Ts]]: ...
 
-# This takes a list of tensors and concatenates them across an axis. We don't
-# know the length of the list and thus can't tell the final dimensions of the
-# tensor.
+# Input tuple has 2 elements.
 @overload
 def cat(
-    tensors: Iterable[Tensor[DType, Unpack[Ts]]], dim: int, *, out: Any = ...
+    tensors: Tuple[Tensor[DType, Unpack[Rs], N1], Tensor[DType, Unpack[Rs], N2]],
+    dim: L[-1],
+    *,
+    out: Any = ...,
+) -> Tensor[DType, Unpack[Rs], Add[N1, N2]]: ...
+@overload
+def cat(
+    tensors: Tuple[Tensor[DType, N, N1, Unpack[Rs]], Tensor[DType, N, N2, Unpack[Rs]]],
+    dim: L[1],
+    *,
+    out: Any = ...,
+) -> Tensor[DType, N, Add[N1, N2], Unpack[Rs]]: ...
+@overload
+def cat(
+    tensors: Tuple[Tensor[DType, N1, Unpack[Rs]], Tensor[DType, N2, Unpack[Rs]]],
+    dim: L[0] = ...,
+    *,
+    out: Any = ...,
+) -> Tensor[DType, Add[N1, N2], Unpack[Rs]]: ...
+
+# Input tuple has 3 elements.
+@overload
+def cat(
+    tensors: Tuple[
+        Tensor[DType, Unpack[Rs], N1],
+        Tensor[DType, Unpack[Rs], N2],
+        Tensor[DType, Unpack[Rs], N3],
+    ],
+    dim: L[-1],
+    *,
+    out: Any = ...,
+) -> Tensor[DType, Unpack[Rs], Add[Add[N1, N2], N3]]: ...
+@overload
+def cat(
+    tensors: Tuple[
+        Tensor[DType, N, N1, Unpack[Rs]],
+        Tensor[DType, N, N2, Unpack[Rs]],
+        Tensor[DType, N, N3, Unpack[Rs]],
+    ],
+    dim: L[1],
+    *,
+    out: Any = ...,
+) -> Tensor[DType, N, Add[Add[N1, N2], N3], Unpack[Rs]]: ...
+@overload
+def cat(
+    tensors: Tuple[
+        Tensor[DType, N1, Unpack[Rs]],
+        Tensor[DType, N2, Unpack[Rs]],
+        Tensor[DType, N3, Unpack[Rs]],
+    ],
+    dim: L[0] = ...,
+    *,
+    out: Any = ...,
+) -> Tensor[DType, Add[Add[N1, N2], N3], Unpack[Rs]]: ...
+
+# This takes an arbitrary-length list of tensors and concatenates them across an
+# axis. We don't know the length of the list and thus can't tell the final
+# dimensions of the tensor.
+@overload
+def cat(
+    tensors: Iterable[Tensor[DType, Unpack[Ts]]], dim: int = ..., *, out: Any = ...
 ) -> Tensor[DType, Unpack[Tuple[Any, ...]]]: ...
 
 save: Any
@@ -873,6 +1577,50 @@ load: Any
 from_numpy: Any
 no_grad: Any
 
+def sign(
+    input: Tensor[DType, Unpack[Rs]], *, out: Optional[Tensor] = ...
+) -> Tensor[DType, Unpack[Rs]]: ...
+def sparse_coo_tensor(
+    input: Tensor[DType, Unpack[Rs]], *, out: Optional[Tensor] = ...
+) -> Tensor[DType, Unpack[Rs]]: ...
+@overload
+def sparse_coo_tensor(
+    indices: Tensor,
+    values: Union[Tensor, List[Any]],
+    size: Tuple[Unpack[Rs]],
+    *,
+    dtype: Optional[DType],
+    device: Union[_device, str, None] = ...,
+    requires_grad: builtin_bool = ...,
+) -> Tensor[DType, Unpack[Rs]]: ...
+@overload
+def sparse_coo_tensor(
+    indices: Tensor,
+    values: Union[Tensor, List[Any]],
+    size: Tuple[Unpack[Rs]],
+    *,
+    dtype: L[float32] = ...,
+    device: Union[_device, str, None] = ...,
+    requires_grad: builtin_bool = ...,
+) -> Tensor[float32, Unpack[Rs]]: ...
+@overload
+def sparse_coo_tensor(
+    indices: Tensor,
+    values: Union[Tensor, List[Any]],
+    size: L[None] = ...,
+    *,
+    dtype: Type[Any] = ...,
+    device: Union[_device, str, None] = ...,
+    requires_grad: builtin_bool = ...,
+) -> Tensor: ...
+@overload
+def softmax(
+    input: Tensor[DType, Unpack[Ts]], dim: int
+) -> Tensor[DType, Unpack[Ts]]: ...
+@overload
+def softmax(
+    input: Tensor[DType, Unpack[Ts]], dim: int, dtype: Type[DType2] = ...
+) -> Tensor[DType2, Unpack[Ts]]: ...
 @overload
 def transpose(
     input: Tensor[DType, Unpack[Rs], N1, N2], dim0: L[-2], dim1: L[-1]

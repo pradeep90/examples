@@ -1,4 +1,4 @@
-from typing import Any, Tuple, TypeVar, overload
+from typing import Tuple, TypeVar, overload
 
 import torch
 

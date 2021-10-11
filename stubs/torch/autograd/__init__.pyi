@@ -1,0 +1,3 @@
+class Function:
+    @classmethod
+    def apply(cls, *args: object) -> Any: ...
